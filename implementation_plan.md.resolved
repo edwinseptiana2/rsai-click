@@ -1,0 +1,176 @@
+# RSAI Click — Linktree/s.id Clone Application
+
+Build a **link-in-bio** application (like Linktree, s.id) on top of the existing rsai-click TanStack Start project. Users can create personalized pages with multiple links, share them via a short URL, and track click analytics.
+
+## User Review Required
+
+> [!NOTE]
+> **Database** via Docker Compose (MariaDB 11 + Adminer). Jalankan `docker compose up -d`.
+
+> [!NOTE]
+> **Authentication** menggunakan [better-auth](https://better-auth.com) dengan Drizzle adapter + TanStack Start integration. Fitur: email/password login, session management, route protection.
+
+> [!WARNING]
+> **Existing starter code** (component-example, about page) akan dihapus/diganti.
+
+---
+
+## Proposed Changes
+
+### 1. Docker Compose (MariaDB)
+
+#### [NEW] [docker-compose.yml](file:///d:/project-rsai/rsai-click/docker-compose.yml)
+- MariaDB 11 + Adminer
+- Credentials: `root` / `rsai_click_pwd`, database: `rsai_click`
+- Ports: MariaDB `3306`, Adminer `8080`
+
+#### [NEW] [.env](file:///d:/project-rsai/rsai-click/.env)
+```
+DATABASE_URL=mysql://root:rsai_click_pwd@localhost:3306/rsai_click
+BETTER_AUTH_SECRET=<random-secret>
+BETTER_AUTH_URL=http://localhost:3000
+```
+
+---
+
+### 2. Database Layer (Drizzle ORM + MariaDB)
+
+#### [NEW] [drizzle.config.ts](file:///d:/project-rsai/rsai-click/drizzle.config.ts)
+- Drizzle Kit config → MariaDB, schema path
+
+#### [NEW] [src/db/index.ts](file:///d:/project-rsai/rsai-click/src/db/index.ts)
+- `mysql2` pool connection + Drizzle ORM instance export
+
+#### [NEW] [src/db/schema.ts](file:///d:/project-rsai/rsai-click/src/db/schema.ts)
+
+| Table | Columns |
+|-------|---------|
+| `pages` | `id`, `user_id` (FK→user), `slug` (unique), `title`, `bio`, `avatar_url`, `theme`, `is_active`, `created_at`, `updated_at` |
+| `links` | `id`, `page_id` (FK→pages), `title`, `url`, `icon`, `position`, `is_active`, `created_at`, `updated_at` |
+| `clicks` | `id`, `link_id` (FK→links), `ip_address`, `user_agent`, `referer`, `clicked_at` |
+
+> [!NOTE]
+> Better-auth auto-generates `user`, `session`, `verification`, `account` tables via CLI.
+
+---
+
+### 3. Authentication (better-auth)
+
+#### [NEW] [src/lib/auth.ts](file:///d:/project-rsai/rsai-click/src/lib/auth.ts)
+- Server-side better-auth instance
+- Drizzle adapter with `provider: "mysql"`
+- `tanstackStartCookies()` plugin
+- Email/password auth enabled
+
+#### [NEW] [src/lib/auth-client.ts](file:///d:/project-rsai/rsai-click/src/lib/auth-client.ts)
+- Client-side `createAuthClient()` for React
+
+#### [NEW] [src/lib/auth.server.ts](file:///d:/project-rsai/rsai-click/src/lib/auth.server.ts)
+- `getSession()` + `ensureSession()` server functions using `createServerFn`
+- Used in route `beforeLoad` for protection
+
+#### [NEW] [src/routes/api/auth/$.ts](file:///d:/project-rsai/rsai-click/src/routes/api/auth/$.ts)
+- Mount better-auth handler at `/api/auth/*`
+
+#### [NEW] [src/routes/login.tsx](file:///d:/project-rsai/rsai-click/src/routes/login.tsx)
+- Login page with email/password form
+- Redirect to `/admin` on success
+
+#### [NEW] [src/routes/register.tsx](file:///d:/project-rsai/rsai-click/src/routes/register.tsx)
+- Registration page with email/password/name form
+- Redirect to `/admin` on success
+
+---
+
+### 4. Server Functions (API)
+
+#### [NEW] [src/server/pages.ts](file:///d:/project-rsai/rsai-click/src/server/pages.ts)
+- `getPages()`, `getPageById(id)`, `getPageBySlug(slug)`, `createPage(data)`, `updatePage(id, data)`, `deletePage(id)`
+- All mutations protected with `ensureSession()`
+- Pages scoped to authenticated user's `user_id`
+
+#### [NEW] [src/server/links.ts](file:///d:/project-rsai/rsai-click/src/server/links.ts)
+- `getLinksByPageId(pageId)`, `createLink(data)`, `updateLink(id, data)`, `deleteLink(id)`, `reorderLinks(pageId, orderedIds)`
+
+#### [NEW] [src/server/clicks.ts](file:///d:/project-rsai/rsai-click/src/server/clicks.ts)
+- `trackClick(linkId, metadata)`, `getClickStats(pageId)`
+
+---
+
+### 5. Routes
+
+#### [MODIFY] [__root.tsx](file:///d:/project-rsai/rsai-click/src/routes/__root.tsx)
+- Update meta title → "RSAI Click"
+- Conditionally show Header/Footer (hide on public profile + auth pages)
+
+#### [MODIFY] [index.tsx](file:///d:/project-rsai/rsai-click/src/routes/index.tsx)
+- Landing page / redirect to `/admin`
+
+#### [DELETE] [about.tsx](file:///d:/project-rsai/rsai-click/src/routes/about.tsx)
+
+#### [NEW] Admin routes (`src/routes/admin/`)
+- `route.tsx` — admin layout with sidebar, protected via `beforeLoad` + `ensureSession()`
+- [index.tsx](file:///d:/project-rsai/rsai-click/src/routes/index.tsx) — dashboard overview (total pages, clicks, recent activity)
+- `pages/index.tsx` — list user's pages
+- `pages/$pageId.tsx` — edit page + manage links
+- `pages/new.tsx` — create new page
+
+#### [NEW] [$slug.tsx](file:///d:/project-rsai/rsai-click/src/routes/$slug.tsx)
+- Public profile page (no auth required)
+- Server-side data fetching, click tracking on link clicks
+
+---
+
+### 6. Components
+
+#### [MODIFY] [Header.tsx](file:///d:/project-rsai/rsai-click/src/components/Header.tsx)
+- Rebrand → "RSAI Click", update nav, add user avatar/logout
+
+#### [NEW] Admin components (`src/components/admin/`)
+- `PageForm.tsx` — create/edit page form
+- `LinkEditor.tsx` — link list editor (add, edit, delete, reorder)
+- `StatsCard.tsx` — analytics cards
+
+#### [NEW] Profile components (`src/components/profile/`)
+- `ProfilePage.tsx` — themed public profile (avatar, bio, links)
+- `LinkButton.tsx` — clickable link with tracking
+
+#### [NEW] Auth components (`src/components/auth/`)
+- `LoginForm.tsx` — login form component
+- `RegisterForm.tsx` — registration form component
+
+---
+
+### 7. Package Dependencies
+
+#### [MODIFY] [package.json](file:///d:/project-rsai/rsai-click/package.json)
+
+| Package | Type | Purpose |
+|---------|------|---------|
+| `drizzle-orm` | dep | ORM |
+| `mysql2` | dep | MariaDB driver |
+| `better-auth` | dep | Authentication |
+| `@better-auth/drizzle-adapter` | dep | Drizzle adapter for better-auth |
+| `drizzle-kit` | devDep | Migration tooling |
+
+New scripts: `db:generate`, `db:migrate`, `db:studio`, `auth:generate`
+
+---
+
+## Verification Plan
+
+### Automated Tests
+1. `docker compose up -d` — verify MariaDB + Adminer start
+2. `npx auth@latest generate` → `pnpm db:generate` → `pnpm db:migrate` — verify all tables created
+3. `pnpm db:studio` — visually verify schema
+
+### Browser Tests
+1. Register + login flow at `/register` → `/login` → `/admin`
+2. Create page, add links via admin dashboard
+3. Visit `/{slug}` — verify public page renders
+4. Click links — verify analytics update
+
+### Manual Verification
+1. Create account, create page with slug `test`, add 3 links
+2. Visit `/test` — beautiful profile page with links
+3. Click links, check admin stats for click counts
