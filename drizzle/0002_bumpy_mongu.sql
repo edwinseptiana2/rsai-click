@@ -1,0 +1,1 @@
+ALTER TABLE `links` ADD `text_color` varchar(20) DEFAULT 'default';

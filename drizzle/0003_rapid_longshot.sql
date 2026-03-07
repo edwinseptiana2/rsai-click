@@ -1,0 +1,1 @@
+ALTER TABLE `links` ADD `custom_icon` text;

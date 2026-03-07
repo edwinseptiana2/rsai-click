@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "../db";
-import { pages } from "../db/schema";
+import { pages, links } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { ensureSession } from "./auth";
 
@@ -20,10 +20,15 @@ export const getPageById = createServerFn({ method: "GET" }).handler(
     const page = await db.query.pages.findFirst({
       where: (p, { and, eq: e }) =>
         and(e(p.id, id), e(p.userId, session.user.id)),
-      with: { links: { orderBy: (l, { asc }) => [asc(l.position)] } },
     });
     if (!page) throw new Error("Page not found");
-    return page;
+    
+    const pageLinks = await db.query.links.findMany({
+      where: eq(links.pageId, id),
+      orderBy: (l, { asc }) => [asc(l.position)],
+    });
+    
+    return { ...page, links: pageLinks };
   },
 );
 
@@ -32,15 +37,15 @@ export const getPageBySlug = createServerFn({ method: "GET" }).handler(
     const slug = data as string;
     const page = await db.query.pages.findFirst({
       where: (p, { and, eq: e }) => and(e(p.slug, slug), e(p.isActive, true)),
-      with: {
-        links: {
-          where: (l, { eq: e }) => e(l.isActive, true),
-          orderBy: (l, { asc }) => [asc(l.position)],
-        },
-        user: { columns: { name: true, image: true } },
-      },
     });
-    return page ?? null;
+    if (!page) return null;
+    
+    const pageLinks = await db.query.links.findMany({
+      where: (l, { and }) => and(eq(l.pageId, page.id), eq(l.isActive, true)),
+      orderBy: (l, { asc }) => [asc(l.position)],
+    });
+    
+    return { ...page, links: pageLinks };
   },
 );
 

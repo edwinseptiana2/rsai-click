@@ -11,12 +11,15 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
 
-  adminer:
-    image: adminer:latest
-    container_name: rsai-click-adminer
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: rsai-click-phpmyadmin
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8081:80"
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: rsai_click_pwd
     depends_on:
       - mariadb
 

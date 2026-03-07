@@ -5,7 +5,6 @@ import {
   boolean,
   int,
   timestamp,
-  serial,
   index,
   uniqueIndex,
 } from "drizzle-orm/mysql-core";
@@ -66,7 +65,7 @@ export const verification = mysqlTable("verification", {
 export const pages = mysqlTable(
   "pages",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").primaryKey().autoincrement(),
     userId: varchar("user_id", { length: 36 })
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -88,13 +87,16 @@ export const pages = mysqlTable(
 export const links = mysqlTable(
   "links",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").primaryKey().autoincrement(),
     pageId: int("page_id")
       .notNull()
       .references(() => pages.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
     url: text("url").notNull(),
     icon: varchar("icon", { length: 100 }),
+    customIcon: text("custom_icon"),
+    color: varchar("color", { length: 20 }).default("default"),
+    textColor: varchar("text_color", { length: 20 }).default("default"),
     position: int("position").notNull().default(0),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -106,7 +108,7 @@ export const links = mysqlTable(
 export const clicks = mysqlTable(
   "clicks",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").primaryKey().autoincrement(),
     linkId: int("link_id")
       .notNull()
       .references(() => links.id, { onDelete: "cascade" }),

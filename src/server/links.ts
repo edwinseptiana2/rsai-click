@@ -23,6 +23,9 @@ export const createLink = createServerFn({ method: "POST" }).handler(
       title: string;
       url: string;
       icon?: string;
+      customIcon?: { type: string; value: string };
+      color?: string;
+      textColor?: string;
       position?: number;
     };
     await ensureSession();
@@ -31,6 +34,9 @@ export const createLink = createServerFn({ method: "POST" }).handler(
       title: typedData.title,
       url: typedData.url,
       icon: typedData.icon ?? null,
+      customIcon: typedData.customIcon ? JSON.stringify(typedData.customIcon) : null,
+      color: typedData.color ?? "default",
+      textColor: typedData.textColor ?? "default",
       position: typedData.position ?? 0,
     });
     return { id: result.insertId };
@@ -44,12 +50,19 @@ export const updateLink = createServerFn({ method: "POST" }).handler(
       title?: string;
       url?: string;
       icon?: string;
+      customIcon?: { type: string; value: string };
+      color?: string;
+      textColor?: string;
       position?: number;
       isActive?: boolean;
     };
     await ensureSession();
-    const { id, ...updates } = typedData;
-    await db.update(links).set(updates).where(eq(links.id, id));
+    const { id, customIcon, ...updates } = typedData;
+    const setData: any = { ...updates };
+    if (customIcon !== undefined) {
+      setData.customIcon = customIcon ? JSON.stringify(customIcon) : null;
+    }
+    await db.update(links).set(setData).where(eq(links.id, id));
     return { success: true };
   },
 );
