@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPages } from "@/server/pages";
 import { Link } from "@tanstack/react-router";
-import { Plus, FileText, ExternalLink, Trash2 } from "lucide-react";
+import { Plus, ExternalLink, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/pages/")({
@@ -43,15 +43,36 @@ function PagesList() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {pages.map((page) => (
           <Link key={page.id} to={`/admin/pages/${page.id}`} className="block">
-            <div className="flex items-center gap-4 p-6 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer bg-white">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
-                <FileText size={24} className="text-slate-600" />
+            <div className="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer bg-white overflow-hidden">
+              {/* Profile Image */}
+              <div className="flex h-32 w-full items-center justify-center rounded-lg bg-slate-100 overflow-hidden">
+                {page.avatarUrl ? (
+                  <img
+                    src={page.avatarUrl}
+                    alt={page.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User size={40} className="text-slate-400" />
+                )}
               </div>
+              
+              {/* Page Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{page.title}</p>
-                <p className="text-sm text-slate-500">rsai.click/{page.slug}</p>
+                <p className="font-semibold truncate text-slate-900">{page.title}</p>
+                <p className="text-xs text-slate-500 truncate">rsai.click/{page.slug}</p>
               </div>
-              <div className="flex items-center gap-2">
+              
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 gap-1"
+                >
+                  <ExternalLink size={14} />
+                  <span className="text-xs">Visit</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -60,7 +81,6 @@ function PagesList() {
                 >
                   <Trash2 size={16} />
                 </Button>
-                <ExternalLink size={16} className="text-slate-400" />
               </div>
             </div>
           </Link>
