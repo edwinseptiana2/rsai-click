@@ -7,6 +7,25 @@
 @custom-variant dark (&:is(.dark *));
 @plugin "@tailwindcss/typography";
 
+/* Safelist for dynamic text color classes */
+@layer utilities {
+  /* Ensure all text colors used in button-templates are available */
+  .text-inherit { @apply text-inherit; }
+  .text-white { @apply text-white; }
+  .text-black { @apply text-black; }
+  .text-slate-700 { @apply text-slate-700; }
+  .text-gray-700 { @apply text-gray-700; }
+  .text-red-600 { @apply text-red-600; }
+  .text-orange-600 { @apply text-orange-600; }
+  .text-yellow-600 { @apply text-yellow-600; }
+  .text-green-600 { @apply text-green-600; }
+  .text-teal-600 { @apply text-teal-600; }
+  .text-blue-600 { @apply text-blue-600; }
+  .text-indigo-600 { @apply text-indigo-600; }
+  .text-purple-600 { @apply text-purple-600; }
+  .text-pink-600 { @apply text-pink-600; }
+}
+
 @theme {
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 }

@@ -3,10 +3,34 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, User, Link, ExternalLink } from "lucide-react";
+import { Plus, User, Link, ExternalLink, Share2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ICON_MAP, getButtonStyles } from "@/components/microsite/button-templates";
+import { BACKGROUND_PATTERNS } from "@/components/microsite/background-patterns";
+
+// Helper function to convert file to base64 data URL
+async function handleImageUpload(
+  e: React.ChangeEvent<HTMLInputElement>,
+  onUpdatePage?: (updates: any) => void
+) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Validate file size (max 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Image size must be less than 2MB");
+    return;
+  }
+
+  // Convert to base64 data URL
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const dataUrl = event.target?.result as string;
+    onUpdatePage?.({ avatarUrl: dataUrl });
+  };
+  reader.readAsDataURL(file);
+}
 
 export function EditorShell({
   page,
@@ -20,47 +44,91 @@ export function EditorShell({
   children: React.ReactNode;
 }) {
   const [previewKey, setPreviewKey] = React.useState(0);
+  const [showPreviewMobile, setShowPreviewMobile] = React.useState(false);
+  const [shareToast, setShareToast] = React.useState<{ show: boolean; message: string }>({ show: false, message: "" });
   
   React.useEffect(() => {
+    // Force preview re-render whenever page data changes
+    // This includes text color changes, link updates, etc.
     setPreviewKey(k => k + 1);
-  }, [page?.links]);
+  }, [page]);
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/${page?.slug}`;
+    const shareTitle = page?.title || "Check out my microsite";
+    const shareText = page?.bio || shareTitle;
+
+    // Try native share API first
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        setShareToast({ show: true, message: "Shared successfully!" });
+      } catch (err) {
+        // User cancelled share or error occurred
+        if ((err as any).name !== "AbortError") {
+          copyToClipboard(shareUrl);
+        }
+      }
+    } else {
+      // Fallback to copy to clipboard
+      copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setShareToast({ show: true, message: "Link copied to clipboard!" });
+      setTimeout(() => setShareToast({ show: false, message: "" }), 2000);
+    }).catch(err => {
+      console.error("Failed to copy:", err);
+      setShareToast({ show: true, message: "Failed to copy link" });
+      setTimeout(() => setShareToast({ show: false, message: "" }), 2000);
+    });
+  };
 
   return (
-    <div className="flex h-[calc(100vh-120px)] w-full gap-8 overflow-hidden">
+    <div className="flex flex-col lg:flex-row w-full gap-4 lg:gap-6 overflow-y-auto lg:overflow-hidden h-auto lg:h-full">
       {/* Left Panel: Editor */}
-      <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="w-full lg:flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-auto lg:h-full">
         <Tabs defaultValue="components" className="flex-1 flex flex-col">
-          <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-            <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-slate-100/50 rounded-lg">
+          <div className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-3 sm:pb-4 border-b border-slate-100">
+            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10 md:h-11 p-1 bg-slate-100/50 rounded-lg">
               <TabsTrigger
                 value="components"
-                className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                className="rounded-md text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
               >
-                Components
+                <span className="sm:hidden">Items</span>
+                <span className="hidden sm:inline">Components</span>
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                className="rounded-md text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
               >
-                Settings
+                <span className="sm:hidden">Gear</span>
+                <span className="hidden sm:inline">Settings</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
             <TabsContent
               value="components"
-              className="mt-0 space-y-6 focus-visible:outline-none"
+              className="mt-0 space-y-4 md:space-y-6 focus-visible:outline-none"
             >
               <Button
                 onClick={onAddLink}
-                className="w-full h-12 bg-black hover:bg-black/90 text-white rounded-lg font-semibold gap-2"
+                className="w-full h-10 sm:h-12 bg-black hover:bg-black/90 text-white rounded-lg font-semibold gap-2 text-sm"
               >
-                <Plus size={20} />
-                Add new component
+                <Plus size={18} />
+                <span className="hidden sm:inline">Add new component</span>
+                <span className="sm:hidden">Add</span>
               </Button>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Component List will go here */}
                 {children}
               </div>
@@ -68,16 +136,63 @@ export function EditorShell({
 
             <TabsContent
               value="settings"
-              className="mt-0 space-y-6 focus-visible:outline-none"
+              className="mt-0 space-y-4 md:space-y-6 focus-visible:outline-none"
             >
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-slate-900 border-b pb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-slate-900 border-b pb-2">
                     Profile
                   </h3>
-                  <div className="space-y-4 pt-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="page-title">Title</Label>
+                  <div className="space-y-3 sm:space-y-4 pt-2">
+                    {/* Avatar Image Upload */}
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="page-avatar" className="text-xs sm:text-sm">Profile Image</Label>
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1 hidden sm:flex">
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="w-12 h-12 rounded-full bg-slate-200 flex-shrink-0 overflow-hidden border border-slate-300 flex items-center justify-center">
+                              {page?.avatarUrl ? (
+                                <img
+                                  src={page.avatarUrl}
+                                  alt="Avatar preview"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <User size={20} className="text-slate-400" />
+                              )}
+                            </div>
+                            <input
+                              id="page-avatar"
+                              type="file"
+                              accept="image/*"
+                              className="flex-1 text-xs"
+                              onChange={(e) => handleImageUpload(e, onUpdatePage)}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 sm:hidden">
+                          <input
+                            id="page-avatar-mobile"
+                            type="file"
+                            accept="image/*"
+                            className="text-xs w-full"
+                            onChange={(e) => handleImageUpload(e, onUpdatePage)}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-500">Or paste image URL:</p>
+                      <Input
+                        value={page?.avatarUrl || ""}
+                        onChange={(e) =>
+                          onUpdatePage?.({ avatarUrl: e.target.value })
+                        }
+                        placeholder="https://example.com/image.jpg"
+                        className="text-xs sm:text-sm"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="page-title" className="text-xs sm:text-sm">Title</Label>
                       <Input
                         id="page-title"
                         value={page?.title || ""}
@@ -85,13 +200,14 @@ export function EditorShell({
                           onUpdatePage?.({ title: e.target.value })
                         }
                         placeholder="Enter page title"
+                        className="text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="page-bio">Bio</Label>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="page-bio" className="text-xs sm:text-sm">Bio</Label>
                       <textarea
                         id="page-bio"
-                        className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex min-h-[60px] sm:min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={page?.bio || ""}
                         onChange={(e) =>
                           onUpdatePage?.({ bio: e.target.value })
@@ -102,12 +218,53 @@ export function EditorShell({
                   </div>
                 </div>
 
+                {/* Background Selector */}
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-slate-900 border-b pb-2 text-red-500">
+                  <h3 className="text-xs sm:text-sm font-semibold text-slate-900 border-b pb-2">
+                    Background Pattern
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
+                    {BACKGROUND_PATTERNS.map((pattern) => (
+                      <button
+                        key={pattern.id}
+                        onClick={() => onUpdatePage?.({ backgroundPattern: pattern.id })}
+                        className={`relative h-16 sm:h-20 rounded-lg border-2 overflow-hidden transition-all hover:scale-105 ${
+                          page?.backgroundPattern === pattern.id
+                            ? "border-slate-900 ring-2 ring-offset-2 ring-slate-300"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                        title={pattern.name}
+                      >
+                        {/* Preview background */}
+                        <div
+                          className={`absolute inset-0 ${pattern.bgClass || "bg-white"}`}
+                          style={
+                            pattern.pattern
+                              ? {
+                                  backgroundColor: pattern.preview === "white" ? "white" : pattern.preview,
+                                  backgroundImage: `url("${pattern.pattern}")`,
+                                  backgroundSize: "40px 40px",
+                                }
+                              : {}
+                          }
+                        />
+                        {/* Label */}
+                        <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-colors flex items-center justify-center">
+                          <span className="text-[9px] sm:text-xs font-medium text-slate-700 bg-white/80 px-2 py-1 rounded text-center">
+                            {pattern.name}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-slate-900 border-b pb-2 text-red-500">
                     Danger Zone
                   </h3>
                   <div className="pt-2">
-                    <p className="text-xs text-slate-500 mb-2">
+                    <p className="text-[10px] sm:text-xs text-slate-500 mb-2">
                       Changing the slug will break existing links.
                     </p>
                     <div className="flex items-center gap-2">
@@ -116,7 +273,7 @@ export function EditorShell({
                         onChange={(e) =>
                           onUpdatePage?.({ slug: e.target.value })
                         }
-                        className="font-mono text-xs"
+                        className="font-mono text-[10px] sm:text-xs"
                       />
                     </div>
                   </div>
@@ -128,35 +285,45 @@ export function EditorShell({
       </div>
 
       {/* Right Panel: Preview */}
-      <div className="hidden lg:flex w-[400px] flex-col items-center justify-center p-8 bg-slate-50/50 rounded-xl border border-slate-200/60 transition-all">
-        <div className="sticky top-0 w-full flex flex-col items-center">
-          <div className="mb-4 flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 text-xs font-medium text-slate-600 shadow-sm max-w-full truncate">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            rsai.click/{page?.slug || "your-page"}
+      <div className="w-full lg:flex-1 flex flex-col p-4 lg:p-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-auto lg:h-full">
+       
+        <div className="w-full flex flex-col lg:flex-col items-center gap-3 lg:gap-4">
+          {/* URL Indicator */}
+          <div className="w-full max-w-[280px] sm:max-w-[320px] flex items-center justify-center gap-2 bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-slate-200 text-[10px] sm:text-xs font-medium text-slate-600 shadow-sm flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
+            <span className="truncate text-center">rsai.click/{page?.slug || "your-page"}</span>
           </div>
 
-          {/* Mobile Frame Container */}
-          <div className="relative w-[320px] h-[640px] bg-slate-900 rounded-[3rem] p-3 shadow-2xl border-[8px] border-slate-800 overflow-hidden ring-1 ring-slate-900/5">
+          {/* Mobile Frame Container - Responsive */}
+          <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[9/16] bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] p-1.5 sm:p-2 shadow-xl sm:shadow-2xl border-[5px] sm:border-[6px] border-slate-800 overflow-hidden ring-1 ring-slate-900/5 flex-shrink-0">
             {/* Front Camera / Notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-slate-800 rounded-b-2xl z-20 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
-              <div className="w-12 h-1 rounded-full bg-slate-700/50" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 h-4 sm:h-5 bg-slate-800 rounded-b-2xl z-20 flex items-center justify-center">
+              <div className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-slate-900 mr-1 sm:mr-1.5" />
+              <div className="w-6 sm:w-8 h-0.5 rounded-full bg-slate-700/50" />
             </div>
 
-            {/* Content Area (Iframe or Local Component) */}
-            <div className="w-full h-full bg-white rounded-[2.2rem] overflow-hidden relative">
+            {/* Content Area */}
+            <div className="w-full h-full bg-white rounded-[1.5rem] overflow-hidden relative">
               {/* Preview Content */}
               <PreviewContent key={previewKey} page={page} />
             </div>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          {/* Share Button */}
+          <div className="w-full flex items-center justify-center gap-2 sm:gap-3 flex-shrink-0 relative">
+            {shareToast.show && (
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-3 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap shadow-lg z-50 animate-in fade-in slide-in-from-bottom-2">
+                {shareToast.message}
+              </div>
+            )}
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full px-5 text-slate-600 border-slate-200 bg-white hover:bg-slate-50 shadow-sm"
+              onClick={handleShare}
+              className="rounded-full px-3 sm:px-5 text-xs sm:text-sm text-slate-600 border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-colors"
             >
-              Share
+              <Share2 size={16} className="sm:w-6 sm:h-6"/>
+              <span className="hidden sm:inline">Share</span>
             </Button>
           </div>
         </div>
@@ -166,13 +333,25 @@ export function EditorShell({
 }
 
 function PreviewContent({ page }: { page: any }) {
-  return (
-    <div className="absolute inset-0 p-6 flex flex-col items-center text-center">
-      {/* Background (Dynamic based on theme) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-emerald-50 -z-10" />
+  const bgPattern = BACKGROUND_PATTERNS.find(p => p.id === page?.backgroundPattern) || BACKGROUND_PATTERNS[0];
 
-      <div className="mt-8 space-y-4 w-full">
-        <div className="w-20 h-20 rounded-full bg-slate-200 mx-auto border-2 border-white shadow-sm overflow-hidden flex items-center justify-center">
+  return (
+    <div
+      className={`absolute inset-0 p-3 sm:p-4 md:p-5 flex flex-col items-center text-center overflow-y-auto ${bgPattern.bgClass || "bg-white"}`}
+      style={
+        bgPattern.pattern
+          ? {
+              backgroundColor: bgPattern.preview === "white" ? "white" : bgPattern.preview,
+              backgroundImage: `url("${bgPattern.pattern}")`,
+              backgroundSize: "40px 40px",
+            }
+          : {}
+      }
+    >
+
+      <div className="mt-4 sm:mt-6 md:mt-8 space-y-2 sm:space-y-3 w-full">
+        {/* Avatar */}
+        <div className="w-14 sm:w-16 md:w-20 h-14 sm:h-16 md:h-20 rounded-full bg-slate-200 mx-auto border-2 border-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
           {page?.avatarUrl ? (
             <img
               src={page.avatarUrl}
@@ -180,24 +359,37 @@ function PreviewContent({ page }: { page: any }) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <User size={40} className="text-slate-400" />
+            <User size={24} className="sm:w-8 sm:h-8 text-slate-400" />
           )}
         </div>
 
-        <div className="space-y-1">
-          <h2 className="text-lg font-bold text-slate-900">
+        {/* Title & Bio */}
+        <div className="space-y-0.5 sm:space-y-1">
+          <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 line-clamp-2">
             {page?.title || "Page Title"}
           </h2>
-          <p className="text-xs text-slate-500 px-4 line-clamp-2">
+          <p className="text-[10px] sm:text-xs md:text-xs text-slate-500 px-2 line-clamp-2">
             {page?.bio || "Welcome to my microsite"}
           </p>
         </div>
 
-        <div className="space-y-3 pt-4 w-full px-2">
+        {/* Links */}
+        <div className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-2 w-full px-1">
           {page?.links?.map((link: any) => {
             const IconComponent = link.icon ? ICON_MAP[link.icon] : Link;
-            const textColorValue = link.textColor || (link as any).text_color || "default";
-            const colorStyles = getButtonStyles(link.color || "default", textColorValue);
+            // Fix: Properly handle both textColor and text_color field names
+            const textColorId = link.textColor ?? link.text_color ?? "default";
+            const colorId = link.color ?? "default";
+            const colorStyles = getButtonStyles(colorId, textColorId);
+            
+            // Debug logging
+            console.log(`Link "${link.title}":`, {
+              textColor: link.textColor,
+              text_color: link.text_color,
+              textColorId,
+              colorId,
+              colorStyles
+            });
             
             let customIcon = null;
             try {
@@ -214,32 +406,34 @@ function PreviewContent({ page }: { page: any }) {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-full py-3 px-4 rounded-xl border flex items-center justify-center gap-2 text-sm font-medium hover:scale-[1.02] transition-transform ${colorStyles.bg} ${colorStyles.text} ${colorStyles.border}`}
+                className={`w-full py-2 sm:py-2.5 md:py-3 px-2.5 sm:px-3 md:px-4 rounded-md sm:rounded-lg md:rounded-xl border flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs md:text-sm font-medium hover:scale-[1.02] transition-transform ${colorStyles.bg} ${colorStyles.text} ${colorStyles.border}`}
+                style={colorStyles.textStyle as any}
               >
+                {console.log(`[Rendering] Applied classes: bg="${colorStyles.bg}" text="${colorStyles.text}" border="${colorStyles.border}" style=`, colorStyles.textStyle)}
                 {customIcon?.type === 'emoji' && (
-                  <span className="text-lg">{customIcon.value}</span>
+                  <span className="text-sm sm:text-base md:text-lg">{customIcon.value}</span>
                 )}
                 {customIcon?.type === 'image' && (
-                  <img src={customIcon.value} alt="" className="w-4 h-4 object-contain" />
+                  <img src={customIcon.value} alt="" className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 object-contain" />
                 )}
                 {!customIcon && link.icon && (
-                  <IconComponent size={16} />
+                  <IconComponent size={12} className="sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                 )}
                 {!customIcon && !link.icon && (
-                  <Link size={16} />
+                  <Link size={12} className="sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                 )}
-                {link.title}
-                <ExternalLink size={12} className="opacity-50" />
+                <span className="line-clamp-1">{link.title}</span>
+                <ExternalLink size={8} className="opacity-50 flex-shrink-0 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3" />
               </a>
             );
           })}
 
           {(!page?.links || page.links.length === 0) && (
-            <div className="space-y-3">
+            <div className="space-y-1.5 sm:space-y-2">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="w-full h-11 bg-slate-100/50 rounded-xl border border-dashed border-slate-200"
+                  className="w-full h-7 sm:h-9 md:h-11 bg-slate-100/50 rounded-md sm:rounded-lg md:rounded-xl border border-dashed border-slate-200"
                 />
               ))}
             </div>
@@ -247,10 +441,10 @@ function PreviewContent({ page }: { page: any }) {
         </div>
       </div>
 
-      <div className="mt-auto pb-4">
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-white/80 backdrop-blur rounded-full border border-slate-200/50 shadow-sm">
-          <span className="text-[10px] text-slate-400">Powered by</span>
-          <span className="text-[10px] font-bold text-slate-600">
+      <div className="mt-auto pb-1.5 sm:pb-2 md:pb-4">
+        <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/80 backdrop-blur rounded-full border border-slate-200/50 shadow-sm text-center">
+          <span className="text-[7px] sm:text-[9px] md:text-[10px] text-slate-400">Powered by</span>
+          <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-slate-600">
             RSAI Click
           </span>
         </div>

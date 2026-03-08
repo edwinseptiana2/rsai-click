@@ -28,6 +28,15 @@ export const getPageById = createServerFn({ method: "GET" }).handler(
       orderBy: (l, { asc }) => [asc(l.position)],
     });
     
+    // Debug log the links data
+    console.log("Server: Fetched links with textColor:", pageLinks.map(l => ({ 
+      id: l.id, 
+      title: l.title, 
+      textColor: l.textColor,
+      text_color: (l as any).text_color,
+      color: l.color 
+    })));
+    
     return { ...page, links: pageLinks };
   },
 );
@@ -80,6 +89,7 @@ export const updatePage = createServerFn({ method: "POST" }).handler(
       bio?: string;
       avatarUrl?: string;
       theme?: string;
+      backgroundPattern?: string;
       isActive?: boolean;
     };
     await ensureSession();

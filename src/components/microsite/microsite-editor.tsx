@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import { EditorShell } from "@/components/microsite/editor-shell";
 import { LinkItem } from "@/components/microsite/link-item";
@@ -62,7 +60,7 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
     async function load() {
       try {
         console.log("Loading page with ID:", pageId);
-        const data = await getPageById({ data: pageId });
+        const data = await getPageById({ data: pageId as any });
         console.log("Page loaded:", data);
         setPage(data);
       } catch (err: any) {
@@ -103,7 +101,7 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
     }));
 
     try {
-      await deleteLinkFn({ data: linkId });
+      await deleteLinkFn({ data: { id: linkId } });
     } catch (err) {
       console.error(err);
     }
@@ -421,11 +419,12 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
                 if (!editingLink) return;
 
                 const updatedLink = { ...editingLink };
+                console.log("Saving link with textColor:", updatedLink.textColor, "Full link:", updatedLink);
                 
                 setIsEditDialogOpen(false);
 
                 try {
-                  await updateLinkFn({
+                  const updateResult = await updateLinkFn({
                     data: {
                       id: updatedLink.id,
                       title: updatedLink.title,
@@ -436,11 +435,22 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
                       textColor: updatedLink.textColor || "default",
                     },
                   });
+                  console.log("Update result:", updateResult);
+                  
+                  // Add small delay to ensure database has committed
+                  await new Promise(resolve => setTimeout(resolve, 100));
                   
                   const freshData = await getPageById({ data: pageId });
+                  console.log("Fresh data received:", freshData.links.map((l: any) => ({ 
+                    id: l.id, 
+                    title: l.title, 
+                    textColor: l.textColor, 
+                    text_color: (l as any).text_color,
+                    color: l.color 
+                  })));
                   setPage(freshData);
                 } catch (err) {
-                  console.error(err);
+                  console.error("Error saving link:", err);
                 }
               }}
             >

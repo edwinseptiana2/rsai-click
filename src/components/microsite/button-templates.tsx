@@ -162,28 +162,49 @@ export const BUTTON_COLORS = [
 ];
 
 export const TEXT_COLORS = [
-  { id: "default", name: "Default", class: "text-inherit" },
-  { id: "white", name: "White", class: "text-white" },
-  { id: "black", name: "Black", class: "text-black" },
-  { id: "slate", name: "Slate", class: "text-slate-700" },
-  { id: "gray", name: "Gray", class: "text-gray-700" },
-  { id: "red", name: "Red", class: "text-red-600" },
-  { id: "orange", name: "Orange", class: "text-orange-600" },
-  { id: "yellow", name: "Yellow", class: "text-yellow-600" },
-  { id: "green", name: "Green", class: "text-green-600" },
-  { id: "teal", name: "Teal", class: "text-teal-600" },
-  { id: "blue", name: "Blue", class: "text-blue-600" },
-  { id: "indigo", name: "Indigo", class: "text-indigo-600" },
-  { id: "purple", name: "Purple", class: "text-purple-600" },
-  { id: "pink", name: "Pink", class: "text-pink-600" },
+  { id: "default", name: "Default", class: "text-inherit", style: {} },
+  { id: "white", name: "White", class: "text-white", style: { color: "white" } },
+  { id: "black", name: "Black", class: "text-black", style: { color: "black" } },
+  { id: "slate", name: "Slate", class: "text-slate-700", style: { color: "#3f3f46" } },
+  { id: "gray", name: "Gray", class: "text-gray-700", style: { color: "#374151" } },
+  { id: "red", name: "Red", class: "text-red-600", style: { color: "#dc2626" } },
+  { id: "orange", name: "Orange", class: "text-orange-600", style: { color: "#ea580c" } },
+  { id: "yellow", name: "Yellow", class: "text-yellow-600", style: { color: "#ca8a04" } },
+  { id: "green", name: "Green", class: "text-green-600", style: { color: "#16a34a" } },
+  { id: "teal", name: "Teal", class: "text-teal-600", style: { color: "#0d9488" } },
+  { id: "blue", name: "Blue", class: "text-blue-600", style: { color: "#2563eb" } },
+  { id: "indigo", name: "Indigo", class: "text-indigo-600", style: { color: "#4f46e5" } },
+  { id: "purple", name: "Purple", class: "text-purple-600", style: { color: "#9333ea" } },
+  { id: "pink", name: "Pink", class: "text-pink-600", style: { color: "#db2777" } },
 ];
 
 export function getButtonStyles(colorId: string, textColorId: string = "default") {
   const color = BUTTON_COLORS.find(c => c.id === colorId) || BUTTON_COLORS[0];
-  const textColor = textColorId === "default" 
-    ? color.text 
-    : (TEXT_COLORS.find(c => c.id === textColorId)?.class || color.text);
-  return { ...color, text: textColor };
+  
+  // Ensure we use the provided textColorId, not default from button color
+  let textColor = color.text; // fallback
+  let textStyle: any = {};
+  
+  if (textColorId && textColorId !== "default") {
+    const customText = TEXT_COLORS.find(c => c.id === textColorId);
+    if (customText) {
+      textColor = customText.class;
+      textStyle = customText.style || {};
+      console.log(`[getButtonStyles] Found custom text color "${textColorId}": ${textColor}`);
+    } else {
+      console.log(`[getButtonStyles] Custom text color "${textColorId}" NOT FOUND in TEXT_COLORS`);
+    }
+  } else {
+    console.log(`[getButtonStyles] Using default text color from button: ${textColor}`);
+  }
+  
+  const result = { 
+    ...color, 
+    text: textColor,
+    textStyle: textStyle
+  };
+  console.log(`[getButtonStyles] Final result:`, { colorId, textColorId, text: textColor, bg: color.bg, textStyle });
+  return result;
 }
 
 export function getIconComponent(iconName: string | null) {
