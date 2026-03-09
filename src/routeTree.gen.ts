@@ -16,10 +16,12 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminPagesIndexRouteImport } from './routes/admin/pages/index'
+import { Route as AdminLinksIndexRouteImport } from './routes/admin/links/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AdminStatsPageIdRouteImport } from './routes/admin/stats/$pageId'
 import { Route as AdminPagesNewRouteImport } from './routes/admin/pages/new'
 import { Route as AdminPagesPageIdRouteImport } from './routes/admin/pages/$pageId'
+import { Route as AdminLinksNewRouteImport } from './routes/admin/links/new'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -56,6 +58,11 @@ const AdminPagesIndexRoute = AdminPagesIndexRouteImport.update({
   path: '/pages/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminLinksIndexRoute = AdminLinksIndexRouteImport.update({
+  id: '/links/',
+  path: '/links/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -76,6 +83,11 @@ const AdminPagesPageIdRoute = AdminPagesPageIdRouteImport.update({
   path: '/pages/$pageId',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminLinksNewRoute = AdminLinksNewRouteImport.update({
+  id: '/links/new',
+  path: '/links/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -84,10 +96,12 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/links/new': typeof AdminLinksNewRoute
   '/admin/pages/$pageId': typeof AdminPagesPageIdRoute
   '/admin/pages/new': typeof AdminPagesNewRoute
   '/admin/stats/$pageId': typeof AdminStatsPageIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/links/': typeof AdminLinksIndexRoute
   '/admin/pages/': typeof AdminPagesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -96,10 +110,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/links/new': typeof AdminLinksNewRoute
   '/admin/pages/$pageId': typeof AdminPagesPageIdRoute
   '/admin/pages/new': typeof AdminPagesNewRoute
   '/admin/stats/$pageId': typeof AdminStatsPageIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/links': typeof AdminLinksIndexRoute
   '/admin/pages': typeof AdminPagesIndexRoute
 }
 export interface FileRoutesById {
@@ -110,10 +126,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/links/new': typeof AdminLinksNewRoute
   '/admin/pages/$pageId': typeof AdminPagesPageIdRoute
   '/admin/pages/new': typeof AdminPagesNewRoute
   '/admin/stats/$pageId': typeof AdminStatsPageIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/links/': typeof AdminLinksIndexRoute
   '/admin/pages/': typeof AdminPagesIndexRoute
 }
 export interface FileRouteTypes {
@@ -125,10 +143,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/admin/'
+    | '/admin/links/new'
     | '/admin/pages/$pageId'
     | '/admin/pages/new'
     | '/admin/stats/$pageId'
     | '/api/auth/$'
+    | '/admin/links/'
     | '/admin/pages/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,10 +157,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/admin'
+    | '/admin/links/new'
     | '/admin/pages/$pageId'
     | '/admin/pages/new'
     | '/admin/stats/$pageId'
     | '/api/auth/$'
+    | '/admin/links'
     | '/admin/pages'
   id:
     | '__root__'
@@ -150,10 +172,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/admin/'
+    | '/admin/links/new'
     | '/admin/pages/$pageId'
     | '/admin/pages/new'
     | '/admin/stats/$pageId'
     | '/api/auth/$'
+    | '/admin/links/'
     | '/admin/pages/'
   fileRoutesById: FileRoutesById
 }
@@ -217,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPagesIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/links/': {
+      id: '/admin/links/'
+      path: '/links'
+      fullPath: '/admin/links/'
+      preLoaderRoute: typeof AdminLinksIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -245,22 +276,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPagesPageIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/links/new': {
+      id: '/admin/links/new'
+      path: '/links/new'
+      fullPath: '/admin/links/new'
+      preLoaderRoute: typeof AdminLinksNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminLinksNewRoute: typeof AdminLinksNewRoute
   AdminPagesPageIdRoute: typeof AdminPagesPageIdRoute
   AdminPagesNewRoute: typeof AdminPagesNewRoute
   AdminStatsPageIdRoute: typeof AdminStatsPageIdRoute
+  AdminLinksIndexRoute: typeof AdminLinksIndexRoute
   AdminPagesIndexRoute: typeof AdminPagesIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminLinksNewRoute: AdminLinksNewRoute,
   AdminPagesPageIdRoute: AdminPagesPageIdRoute,
   AdminPagesNewRoute: AdminPagesNewRoute,
   AdminStatsPageIdRoute: AdminStatsPageIdRoute,
+  AdminLinksIndexRoute: AdminLinksIndexRoute,
   AdminPagesIndexRoute: AdminPagesIndexRoute,
 }
 

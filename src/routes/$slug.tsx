@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { getPageBySlug } from '@/server/pages'
 import { trackClick } from '@/server/clicks'
+import { getShortLinkBySlug, trackShortLinkClick } from '@/server/shortLinks'
 import { getButtonStyles, ICON_MAP } from '@/components/microsite/button-templates'
 import { User, ExternalLink } from 'lucide-react'
 import { BACKGROUND_PATTERNS } from '@/components/microsite/background-patterns'
@@ -47,6 +48,28 @@ function RouteComponent() {
 
     async function load() {
       try {
+        // First check if it's a short link
+        const shortLink = await getShortLinkBySlug({ data: slug } as any)
+        if (shortLink) {
+          // Track the click
+          try {
+            await trackShortLinkClick({
+              data: {
+                shortLinkId: shortLink.id,
+                userAgent: navigator.userAgent,
+                referer: document.referrer || undefined,
+              }
+            })
+          } catch (err) {
+            console.error('Failed to track short link click:', err)
+          }
+          
+          // Redirect to target URL
+          window.location.href = shortLink.targetUrl
+          return
+        }
+        
+        // If not a short link, try to load as a page
         const data = await getPageBySlug({ data: slug } as any)
         if (!data) {
           setError('Page not found')

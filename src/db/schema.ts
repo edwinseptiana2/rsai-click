@@ -121,6 +121,42 @@ export const clicks = mysqlTable(
   (table) => [index("link_id_idx").on(table.linkId)],
 );
 
+export const shortLinks = mysqlTable(
+  "short_links",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    userId: varchar("user_id", { length: 36 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    slug: varchar("slug", { length: 20 }).notNull(),
+    targetUrl: text("target_url").notNull(),
+    title: varchar("title", { length: 255 }),
+    description: text("description"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("short_slug_idx").on(table.slug),
+    index("short_user_id_idx").on(table.userId),
+  ],
+);
+
+export const shortLinkClicks = mysqlTable(
+  "short_link_clicks",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    shortLinkId: int("short_link_id")
+      .notNull()
+      .references(() => shortLinks.id, { onDelete: "cascade" }),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    referer: text("referer"),
+    clickedAt: timestamp("clicked_at").notNull().defaultNow(),
+  },
+  (table) => [index("short_link_id_idx").on(table.shortLinkId)],
+);
+
 // ─── Relations ─────────────────────────────────────────────────────
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
@@ -148,4 +184,13 @@ export const linksRelations = relations(links, ({ one, many }) => ({
 
 export const clicksRelations = relations(clicks, ({ one }) => ({
   link: one(links, { fields: [clicks.linkId], references: [links.id] }),
+}));
+
+export const shortLinksRelations = relations(shortLinks, ({ one, many }) => ({
+  user: one(user, { fields: [shortLinks.userId], references: [user.id] }),
+  clicks: many(shortLinkClicks),
+}));
+
+export const shortLinkClicksRelations = relations(shortLinkClicks, ({ one }) => ({
+  shortLink: one(shortLinks, { fields: [shortLinkClicks.shortLinkId], references: [shortLinks.id] }),
 }));
