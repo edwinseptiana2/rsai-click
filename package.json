@@ -60,6 +60,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "drizzle-kit": "^0.31.9",
     "jsdom": "^28.1.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vinxi": "^0.5.11",
     "vite": "^7.3.1",
