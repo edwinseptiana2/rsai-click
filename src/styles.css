@@ -458,3 +458,31 @@ a {
     @apply font-sans;
   }
 }
+
+/* Button global enhancements */
+button,
+[role="button"] {
+  cursor: pointer;
+  user-select: none;
+}
+
+button:disabled,
+[role="button"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Focus visible styles for accessibility */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+[role="button"] {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease,
+    transform 180ms ease, box-shadow 180ms ease;
+}

@@ -44,8 +44,8 @@ function LoginPage() {
     <main className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4">
       <div className="island-shell w-full max-w-md rounded-2xl p-8">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)]">
-            <svg
+          <div className="mx-auto mb-4 flex h-12 w-full items-center justify-center rounded-xl">
+            {/* <svg
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -58,9 +58,14 @@ function LoginPage() {
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
               <polyline points="10 17 15 12 10 7" />
               <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>
+            </svg> */}
+            <img
+                    src="/rsai-click-new-icon-only.png"
+                    alt="RSAI Click"
+                    className="mt-6 size-18 rounded-xl dark:bg-white"
+                  />
           </div>
-          <h1 className="display-title text-2xl font-bold text-[var(--sea-ink)]">
+          <h1 className="mt-10 display-title text-2xl font-bold text-[var(--sea-ink)]">
             Welcome back
           </h1>
           <p className="mt-1 text-sm text-(--sea-ink-soft)">
@@ -112,10 +117,9 @@ function LoginPage() {
           </div>
 
           <Button
-            variant="secondary"
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-linear-to-r from-(--lagoon) to-(--lagoon-deep) px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-(--lagoon)/20 transition hover:shadow-xl hover:shadow-(--lagoon)/30 disabled:opacity-50"
+            className="w-full"
           >
             {loading ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

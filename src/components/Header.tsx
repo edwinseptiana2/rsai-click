@@ -10,8 +10,12 @@ export default function Header() {
             to="/"
             className="inline-flex items-center gap-2 rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm text-[var(--sea-ink)] no-underline shadow-[0_8px_24px_rgba(30,90,72,0.08)] transition-all hover:border-[var(--lagoon)] hover:bg-gradient-to-br hover:from-white hover:to-[var(--foam)] hover:shadow-lg hover:-translate-y-0.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:hover:border-slate-600 dark:hover:bg-slate-700 sm:px-4 sm:py-2"
           >
-            <span className="h-2 w-2 rounded-full bg-[linear-gradient(90deg,#56c6be,#7ed3bf)] dark:bg-[linear-gradient(90deg,#60d7cf,#8de5db)]" />
-            RSAI Click
+            <img
+              src="/logo-rsai-click-new.png"
+              alt="RSAI Click"
+              className="h-5 w-auto"
+            />
+            <span className="hidden sm:inline">RSAI Click</span>
           </Link>
         </h2>
 

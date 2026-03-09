@@ -257,6 +257,50 @@ export function EditorShell({
                       </button>
                     ))}
                   </div>
+                  
+                  {/* Random Gradient Button */}
+                  <Button
+                    onClick={() => {
+                      const directions = ["bg-gradient-to-r", "bg-gradient-to-l", "bg-gradient-to-t", "bg-gradient-to-b", "bg-gradient-to-tr", "bg-gradient-to-tl", "bg-gradient-to-br", "bg-gradient-to-bl"];
+                      const colorSets = [
+                        ["from-red-500", "via-orange-500", "to-yellow-500"],
+                        ["from-pink-500", "via-rose-500", "to-red-500"],
+                        ["from-purple-500", "via-violet-500", "to-indigo-500"],
+                        ["from-blue-500", "via-cyan-500", "to-teal-500"],
+                        ["from-green-500", "via-emerald-500", "to-teal-500"],
+                        ["from-amber-500", "via-orange-500", "to-red-500"],
+                        ["from-fuchsia-500", "via-purple-500", "to-violet-500"],
+                        ["from-cyan-500", "via-blue-500", "to-indigo-500"],
+                        ["from-lime-500", "via-green-500", "to-emerald-500"],
+                        ["from-rose-500", "via-pink-500", "to-fuchsia-500"],
+                        ["from-sky-500", "via-blue-500", "to-indigo-500"],
+                        ["from-indigo-500", "via-purple-500", "to-pink-500"],
+                      ];
+                      const direction = directions[Math.floor(Math.random() * directions.length)];
+                      const colorSet = colorSets[Math.floor(Math.random() * colorSets.length)];
+                      const gradientClass = `${direction} ${colorSet.join(" ")}`;
+                      onUpdatePage?.({ backgroundPattern: `gradient-${Date.now()}`, gradientClass });
+                    }}
+                    variant="outline"
+                    className="w-full mt-2 gap-2 text-xs sm:text-sm border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                      <path d="M3 3v5h5" />
+                      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                      <path d="M16 21h5v-5" />
+                    </svg>
+                    Random Tailwind Gradient
+                  </Button>
                 </div>
 
                 <div className="space-y-2">

@@ -47,8 +47,12 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="/admin">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <User className="size-4" />
+                <div className="flex aspect-square size-10 items-center justify-center rounded-sm bg-sidebar-secondary text-sidebar-primary-foreground overflow-hidden">
+                  <img
+                    src="/rsai-click-new-icon-only.png"
+                    alt="RSAI Click"
+                    className="size-8 object-contain dark:bg-white dark:rounded-sm"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">RSAI Click</span>

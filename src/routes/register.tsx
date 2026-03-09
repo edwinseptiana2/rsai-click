@@ -7,6 +7,7 @@ import {
 import { useState } from "react";
 import { signUp } from "@/lib/auth-client";
 import { getSession } from "@/server/auth";
+import { Button } from "#/components/ui/button";
 
 export const Route = createFileRoute("/register")({
   beforeLoad: async () => {
@@ -49,8 +50,8 @@ function RegisterPage() {
     <main className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4">
       <div className="island-shell w-full max-w-md rounded-2xl p-8">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)]">
-            <svg
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl">
+            {/* <sv
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -64,12 +65,17 @@ function RegisterPage() {
               <circle cx="9" cy="7" r="4" />
               <line x1="19" y1="8" x2="19" y2="14" />
               <line x1="22" y1="11" x2="16" y2="11" />
-            </svg>
+            </svg> */}
+            <img
+                src="/rsai-click-new-icon-only.png"
+                alt="RSAI Click"
+                className="mt-6 size-18 rounded-xl dark:bg-white"
+            />
           </div>
-          <h1 className="display-title text-2xl font-bold text-[var(--sea-ink)]">
+          <h1 className="display-title text-2xl font-bold text-(--sea-ink)">
             Create an account
           </h1>
-          <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+          <p className="mt-1 text-sm text-(--sea-ink-soft)">
             Join RSAI Click today
           </p>
         </div>
@@ -84,7 +90,7 @@ function RegisterPage() {
           <div>
             <label
               htmlFor="name"
-              className="mb-1.5 block text-sm font-medium text-[var(--sea-ink)]"
+              className="mb-1.5 block text-sm font-medium text-(--sea-ink)"
             >
               Name
             </label>
@@ -94,14 +100,14 @@ function RegisterPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--sea-ink)] outline-none transition focus:border-[var(--lagoon)] focus:ring-2 focus:ring-[var(--lagoon)]/20"
+              className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2.5 text-sm text-(--sea-ink) outline-none transition focus:border-(--lagoon) focus:ring-2 focus:ring-(--lagoon)/20"
               placeholder="John Doe"
             />
           </div>
           <div>
             <label
               htmlFor="email"
-              className="mb-1.5 block text-sm font-medium text-[var(--sea-ink)]"
+              className="mb-1.5 block text-sm font-medium text-(--sea-ink)"
             >
               Email
             </label>
@@ -111,14 +117,14 @@ function RegisterPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--sea-ink)] outline-none transition focus:border-[var(--lagoon)] focus:ring-2 focus:ring-[var(--lagoon)]/20"
+              className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2.5 text-sm text-(--sea-ink) outline-none transition focus:border-(--lagoon) focus:ring-2 focus:ring-(--lagoon)/20"
               placeholder="you@example.com"
             />
           </div>
           <div>
             <label
               htmlFor="password"
-              className="mb-1.5 block text-sm font-medium text-[var(--sea-ink)]"
+              className="mb-1.5 block text-sm font-medium text-(--sea-ink)"
             >
               Password
             </label>
@@ -128,29 +134,29 @@ function RegisterPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--sea-ink)] outline-none transition focus:border-[var(--lagoon)] focus:ring-2 focus:ring-[var(--lagoon)]/20"
+              className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2.5 text-sm text-(--sea-ink) outline-none transition focus:border-(--lagoon) focus:ring-2 focus:ring-(--lagoon)/20"
               placeholder="••••••••"
               minLength={8}
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--lagoon)] to-[var(--lagoon-deep)] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[var(--lagoon)]/20 transition hover:shadow-xl hover:shadow-[var(--lagoon)]/30 disabled:opacity-50"
+            className="w-full"
           >
             {loading ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : null}
             {loading ? "Creating account..." : "Create account"}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-[var(--sea-ink-soft)]">
+        <p className="mt-6 text-center text-sm text-(--sea-ink-soft)">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-semibold text-[var(--lagoon-deep)] hover:text-[var(--lagoon)]"
+            className="font-semibold text-(--lagoon-deep) hover:text-(--lagoon)"
           >
             Sign in
           </Link>
