@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { getPageBySlug } from '@/server/pages'
-import { User } from 'lucide-react'
+import { getButtonStyles, ICON_MAP } from '@/components/microsite/button-templates'
+import { User, ExternalLink } from 'lucide-react'
 import { BACKGROUND_PATTERNS } from '@/components/microsite/background-patterns'
 
 export const Route = createFileRoute('/$slug')({
@@ -127,12 +128,12 @@ function RouteComponent() {
           </div>
 
           {/* Title & Bio */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
               {page.title}
             </h1>
             {page.bio && (
-              <p className="text-slate-600 text-sm sm:text-base whitespace-pre-wrap">
+              <p className="text-base font-light text-slate-500 leading-relaxed">
                 {page.bio}
               </p>
             )}
@@ -142,17 +143,44 @@ function RouteComponent() {
           {page.links && page.links.length > 0 && (
             <div className="space-y-3">
               {page.links.map((link: any) => {
-                const buttonStyles = getButtonStyles(link.color, link.textColor)
+                const buttonStyle = getButtonStyles(link.color, link.textColor)
+                const IconComponent = link.icon ? ICON_MAP[link.icon] : null
+                
+                let customIcon = null
+                try {
+                  if (link.customIcon) {
+                    customIcon = typeof link.customIcon === 'string' ? JSON.parse(link.customIcon) : link.customIcon
+                  }
+                } catch (e) {
+                  customIcon = null
+                }
+                
                 return (
                   <a
                     key={link.id}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`block px-4 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:shadow-lg hover:-translate-y-0.5 ${buttonStyles.className}`}
-                    style={buttonStyles.style}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:shadow-lg hover:-translate-y-0.5 ${buttonStyle.bg} ${buttonStyle.text} border-2 ${buttonStyle.border}`}
+                    style={buttonStyle.textStyle}
                   >
-                    {link.title}
+                    <div className="flex items-center gap-3">
+                      {(customIcon || IconComponent) && (
+                        <div className="flex-shrink-0">
+                          {customIcon?.type === 'emoji' && (
+                            <span className="text-lg">{customIcon.value}</span>
+                          )}
+                          {customIcon?.type === 'image' && (
+                            <img src={customIcon.value} alt="" className="w-5 h-5 object-contain" />
+                          )}
+                          {!customIcon && IconComponent && (
+                            <IconComponent size={20} />
+                          )}
+                        </div>
+                      )}
+                      <span>{link.title}</span>
+                    </div>
+                    <ExternalLink size={16} className="flex-shrink-0 ml-2" />
                   </a>
                 )
               })}
@@ -171,33 +199,4 @@ function RouteComponent() {
   )
 }
 
-function getButtonStyles(color: string, textColor: string) {
-  const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-    default: { bg: 'bg-slate-900', text: 'text-white', border: 'border-slate-900' },
-    blue: { bg: 'bg-blue-600', text: 'text-white', border: 'border-blue-600' },
-    purple: { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-600' },
-    pink: { bg: 'bg-pink-600', text: 'text-white', border: 'border-pink-600' },
-    red: { bg: 'bg-red-600', text: 'text-white', border: 'border-red-600' },
-    green: { bg: 'bg-green-600', text: 'text-white', border: 'border-green-600' },
-    yellow: { bg: 'bg-yellow-500', text: 'text-slate-900', border: 'border-yellow-500' },
-    orange: { bg: 'bg-orange-600', text: 'text-white', border: 'border-orange-600' },
-  }
-
-  const textColorMap: Record<string, string> = {
-    default: 'text-white',
-    black: 'text-black',
-    white: 'text-white',
-    gray: 'text-gray-600',
-    slate: 'text-slate-600',
-  }
-
-  const colorStyle = colorMap[color] || colorMap.default
-  const textStyle = textColorMap[textColor] || textColorMap.default
-
-  return {
-    className: `${colorStyle.bg} ${textStyle} border-2 ${colorStyle.border}`,
-    style: textColor === 'black' || textColor === 'white' 
-      ? { color: textColor.toLowerCase() }
-      : {},
-  }
-}
+export default RouteComponent

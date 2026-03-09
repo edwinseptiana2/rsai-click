@@ -10,39 +10,43 @@
 /* Safelist for dynamic text color classes */
 @layer utilities {
   /* Ensure all text colors used in button-templates are available */
-  .text-inherit { @apply text-inherit; }
-  .text-white { @apply text-white; }
-  .text-black { @apply text-black; }
-  .text-slate-700 { @apply text-slate-700; }
-  .text-gray-700 { @apply text-gray-700; }
-  .text-red-600 { @apply text-red-600; }
-  .text-orange-600 { @apply text-orange-600; }
-  .text-yellow-600 { @apply text-yellow-600; }
-  .text-green-600 { @apply text-green-600; }
-  .text-teal-600 { @apply text-teal-600; }
-  .text-blue-600 { @apply text-blue-600; }
-  .text-indigo-600 { @apply text-indigo-600; }
-  .text-purple-600 { @apply text-purple-600; }
-  .text-pink-600 { @apply text-pink-600; }
+  .text-inherit { color: inherit; }
+  .text-white { color: #ffffff; }
+  .text-black { color: #000000; }
+  .text-slate-50 { color: #f8fafc; }
+  .text-slate-100 { color: #f1f5f9; }
+  .text-slate-700 { color: #334155; }
+  .text-gray-700 { color: #374151; }
+  .text-red-600 { color: #dc2626; }
+  .text-orange-600 { color: #ea580c; }
+  .text-yellow-600 { color: #ca8a04; }
+  .text-green-600 { color: #16a34a; }
+  .text-teal-600 { color: #0d9488; }
+  .text-blue-600 { color: #2563eb; }
+  .text-indigo-600 { color: #4f46e5; }
+  .text-purple-600 { color: #9333ea; }
+  .text-pink-600 { color: #db2777; }
 }
 
 @theme {
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --color-white: #ffffff;
+  --color-black: #000000;
 }
 
 :root {
-  --sea-ink: #173a40;
-  --sea-ink-soft: #416166;
-  --lagoon: #4fb8b2;
-  --lagoon-deep: #328f97;
-  --palm: #2f6a4a;
+  --sea-ink: #0d2a2e;
+  --sea-ink-soft: #2d5256;
+  --lagoon: #0d8b85;
+  --lagoon-deep: #0a6b63;
+  --palm: #1a5a3a;
   --sand: #e7f0e8;
   --foam: #f3faf5;
   --surface: rgba(255, 255, 255, 0.74);
   --surface-strong: rgba(255, 255, 255, 0.9);
   --line: rgba(23, 58, 64, 0.14);
   --inset-glint: rgba(255, 255, 255, 0.82);
-  --kicker: rgba(47, 106, 74, 0.9);
+  --kicker: #1a5a3a;
   --bg-base: #e7f3ec;
   --header-bg: rgba(251, 255, 248, 0.84);
   --chip-bg: rgba(255, 255, 255, 0.8);
@@ -193,12 +197,26 @@ a:hover {
   color: #246f76;
 }
 
+.dark a {
+  color: #60d7cf;
+  text-decoration-color: rgba(96, 215, 207, 0.4);
+}
+
+.dark a:hover {
+  color: #8de5db;
+}
+
 code {
   font-size: 0.9em;
   border: 1px solid var(--line);
   background: color-mix(in oklab, var(--surface-strong) 82%, white 18%);
   border-radius: 7px;
   padding: 2px 7px;
+}
+
+.dark code {
+  border: 1px solid rgba(141, 229, 219, 0.2);
+  background: rgba(22, 50, 57, 0.6);
 }
 
 pre code {
@@ -229,6 +247,15 @@ pre code {
   backdrop-filter: blur(4px);
 }
 
+.dark .island-shell {
+  border-color: rgba(141, 229, 219, 0.2);
+  background: linear-gradient(165deg, rgba(15, 31, 36, 0.8), rgba(13, 28, 32, 0.6));
+  box-shadow:
+    0 1px 0 rgba(194, 247, 238, 0.1) inset,
+    0 22px 44px rgba(10, 20, 24, 0.3),
+    0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
 .feature-card {
   background: linear-gradient(165deg, color-mix(in oklab, var(--surface-strong) 93%, white 7%), var(--surface));
   box-shadow:
@@ -237,9 +264,22 @@ pre code {
     0 4px 14px rgba(23, 58, 64, 0.06);
 }
 
+.dark .feature-card {
+  background: linear-gradient(165deg, rgba(20, 39, 45, 0.8), rgba(13, 28, 32, 0.6));
+  box-shadow:
+    0 1px 0 rgba(194, 247, 238, 0.08) inset,
+    0 18px 34px rgba(10, 20, 24, 0.3),
+    0 4px 14px rgba(0, 0, 0, 0.15);
+  border-color: rgba(141, 229, 219, 0.15);
+}
+
 .feature-card:hover {
   transform: translateY(-2px);
   border-color: color-mix(in oklab, var(--lagoon-deep) 35%, var(--line));
+}
+
+.dark .feature-card:hover {
+  border-color: rgba(96, 215, 207, 0.4);
 }
 
 button,
@@ -265,6 +305,10 @@ a {
   color: var(--sea-ink-soft);
 }
 
+.dark .nav-link {
+  color: #afcdc8;
+}
+
 .nav-link::after {
   content: "";
   position: absolute;
@@ -278,9 +322,18 @@ a {
   transition: transform 170ms ease;
 }
 
+.dark .nav-link::after {
+  background: linear-gradient(90deg, #60d7cf, #8de5db);
+}
+
 .nav-link:hover,
 .nav-link.is-active {
   color: var(--sea-ink);
+}
+
+.dark .nav-link:hover,
+.dark .nav-link.is-active {
+  color: #d7ece8;
 }
 
 .nav-link:hover::after,
@@ -297,6 +350,10 @@ a {
 .site-footer {
   border-top: 1px solid var(--line);
   background: color-mix(in oklab, var(--header-bg) 84%, transparent 16%);
+}
+
+.dark .site-footer {
+  border-top-color: rgba(141, 229, 219, 0.18);
 }
 
 .rise-in {

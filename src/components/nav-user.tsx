@@ -1,5 +1,3 @@
-"use client";
-
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import {
   DropdownMenu,
@@ -23,9 +21,14 @@ import {
   CreditCard,
   Bell,
   LogOut,
+  Sun,
+  Moon,
+  Laptop2,
+  User,
 } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
 import { useNavigate } from "@tanstack/react-router";
+import { useThemeMode } from "#/components/ThemeToggle";
 
 export function NavUser({
   user,
@@ -38,11 +41,15 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
+  const { mode, toggleMode } = useThemeMode();
 
   const handleSignOut = async () => {
     await signOut();
     navigate({ to: "/login" });
   };
+
+  const themeIcon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Laptop2;
+  const ThemeIcon = themeIcon;
 
   return (
     <SidebarMenu>
@@ -87,25 +94,22 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem disabled>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem disabled>
-                <BadgeCheck className="mr-2 h-4 w-4" />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                <CreditCard className="mr-2 h-4 w-4" />
-                Billing
+                <User className="mr-2 h-4 w-4" />
+                Profile
               </DropdownMenuItem>
               <DropdownMenuItem disabled>
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={toggleMode}>
+                <ThemeIcon className="mr-2 h-4 w-4" />
+                {mode === 'light' ? 'Dark Mode' : mode === 'dark' ? 'Auto Mode' : 'Light Mode'}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

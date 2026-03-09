@@ -2,6 +2,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { getSession } from "@/server/auth";
+import { Button } from "#/components/ui/button";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
@@ -62,7 +63,7 @@ function LoginPage() {
           <h1 className="display-title text-2xl font-bold text-[var(--sea-ink)]">
             Welcome back
           </h1>
-          <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+          <p className="mt-1 text-sm text-(--sea-ink-soft)">
             Sign in to your RSAI Click account
           </p>
         </div>
@@ -105,28 +106,29 @@ function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--sea-ink)] outline-none transition focus:border-[var(--lagoon)] focus:ring-2 focus:ring-[var(--lagoon)]/20"
+              className="w-full rounded-lg border border-(--line) bg-(--surface) px-3 py-2.5 text-sm text-(--sea-ink) outline-none transition focus:border-(--lagoon) focus:ring-2 focus:ring-(--lagoon)/20"
               placeholder="••••••••"
             />
           </div>
 
-          <button
+          <Button
+            variant="secondary"
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--lagoon)] to-[var(--lagoon-deep)] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[var(--lagoon)]/20 transition hover:shadow-xl hover:shadow-[var(--lagoon)]/30 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-linear-to-r from-(--lagoon) to-(--lagoon-deep) px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-(--lagoon)/20 transition hover:shadow-xl hover:shadow-(--lagoon)/30 disabled:opacity-50"
           >
             {loading ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : null}
             {loading ? "Signing in..." : "Sign in"}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-[var(--sea-ink-soft)]">
+        <p className="mt-6 text-center text-sm text-(--sea-ink-soft)">
           Don't have an account?{" "}
           <a
             href="/register"
-            className="font-semibold text-[var(--lagoon-deep)] hover:text-[var(--lagoon)]"
+            className="font-semibold text-(--lagoon-deep) hover:text-(--lagoon)"
           >
             Create one
           </a>
