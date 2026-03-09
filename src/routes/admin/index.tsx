@@ -1,17 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getDashboardStats } from "@/server/clicks";
-import { BarChart3, Smartphone, Globe, Clock } from "lucide-react";
+import { getPagesWithStats } from "@/server/pages";
+import { BarChart3, Smartphone, Globe, Clock, ExternalLink, Copy, Link as LinkIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   loader: async () => {
-    const stats = await getDashboardStats({ data: undefined });
-    return { stats };
+    const [stats, pagesWithStats] = await Promise.all([
+      getDashboardStats({ data: undefined }),
+      getPagesWithStats({ data: undefined }),
+    ]);
+    return { stats, pagesWithStats };
   },
   component: AdminDashboard,
 });
 
 function AdminDashboard() {
-  const { stats } = Route.useLoaderData();
+  const { stats, pagesWithStats } = Route.useLoaderData();
 
   const formatTime = (date: any) => {
     return new Date(date).toLocaleString("en-US", {
@@ -234,6 +238,93 @@ function AdminDashboard() {
           <p className="text-muted-foreground mb-4">No click data yet. Create pages and share them to see statistics.</p>
         </div>
       )}
+
+      {/* URL Access Section */}
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <LinkIcon size={20} className="text-foreground" />
+          <h3 className="text-sm font-semibold text-foreground">URL Akses</h3>
+        </div>
+        {pagesWithStats.length > 0 ? (
+          <div className="space-y-3">
+            {pagesWithStats.map((page) => {
+              const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/${page.slug}`;
+              
+              const handleCopyUrl = async (e: React.MouseEvent) => {
+                e.preventDefault();
+                try {
+                  await navigator.clipboard.writeText(fullUrl);
+                  alert('URL copied to clipboard!');
+                } catch (err) {
+                  console.error('Failed to copy:', err);
+                }
+              };
+              
+              const handleVisit = (e: React.MouseEvent) => {
+                e.preventDefault();
+                window.open(fullUrl, '_blank', 'noopener,noreferrer');
+              };
+              
+              return (
+                <div
+                  key={page.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 transition-colors gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-semibold text-foreground truncate">{page.title}</h4>
+                      {page.isActive ? (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">Active</span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">Inactive</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono truncate mb-2">{fullUrl}</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <LinkIcon size={12} />
+                        {page.linkCount} {page.linkCount === 1 ? 'link' : 'links'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <BarChart3 size={12} />
+                        {page.clickCount.toLocaleString()} {page.clickCount === 1 ? 'click' : 'clicks'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`/admin/stats/${page.id}`}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    >
+                      <BarChart3 size={14} />
+                      Stats
+                    </a>
+                    <button
+                      onClick={handleCopyUrl}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    >
+                      <Copy size={14} />
+                      Copy
+                    </button>
+                    <button
+                      onClick={handleVisit}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
+                    >
+                      <ExternalLink size={14} />
+                      Visit
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground mb-2">Belum ada halaman</p>
+            <p className="text-xs text-muted-foreground">Buat halaman pertama Anda untuk mendapatkan URL akses</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

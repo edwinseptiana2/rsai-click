@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { getPageBySlug } from '@/server/pages'
+import { trackClick } from '@/server/clicks'
 import { getButtonStyles, ICON_MAP } from '@/components/microsite/button-templates'
 import { User, ExternalLink } from 'lucide-react'
 import { BACKGROUND_PATTERNS } from '@/components/microsite/background-patterns'
@@ -14,6 +15,28 @@ function RouteComponent() {
   const [page, setPage] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Handle link click with tracking
+  const handleLinkClick = async (e: React.MouseEvent<HTMLAnchorElement>, link: any) => {
+    e.preventDefault()
+    
+    try {
+      // Track the click
+      await trackClick({
+        data: {
+          linkId: link.id,
+          userAgent: navigator.userAgent,
+          referer: document.referrer || undefined,
+        }
+      })
+    } catch (err) {
+      console.error('Failed to track click:', err)
+      // Continue with redirect even if tracking fails
+    }
+    
+    // Redirect to the target URL
+    window.open(link.url, '_blank', 'noopener,noreferrer')
+  }
 
   useEffect(() => {
     if (!slug) {
@@ -164,8 +187,7 @@ function RouteComponent() {
                   <a
                     key={link.id}
                     href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={(e) => handleLinkClick(e, link)}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:shadow-lg hover:-translate-y-0.5 ${buttonStyle.bg} ${buttonStyle.text} border-2 ${buttonStyle.border}`}
                     style={buttonStyle.textStyle}
                   >

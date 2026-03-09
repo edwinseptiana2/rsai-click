@@ -35,14 +35,24 @@ async function runMigrations() {
         // Baseline files up to 0004 since the production DB already matches this state
         const baselineFiles = files.filter(f => /^(0000|0001|0002|0003|0004)_/.test(f));
         
+        // Read the journal to get the accurate timestamps
+        const journalContent = fs.readFileSync(path.join(dir, "meta", "_journal.json"), "utf-8");
+        const journal = JSON.parse(journalContent);
+        
         for (const file of baselineFiles) {
           const content = fs.readFileSync(path.join(dir, file), "utf-8");
           const hash = crypto.createHash("sha256").update(content).digest("hex");
+          
+          // Find the precise timestamp from Drizzle's journal
+          const tag = file.replace(".sql", "");
+          const journalEntry = journal.entries.find((e: any) => e.tag === tag);
+          const timestamp = journalEntry ? journalEntry.when : Date.now();
+          
           await connection.query(
             "INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)",
-            [hash, Date.now()]
+            [hash, timestamp]
           );
-          console.log(`✅ Baselined: ${file}`);
+          console.log(`✅ Baselined: ${file} (timestamp: ${timestamp})`);
         }
       } else {
         console.log("ℹ️ Migrations already tracked, skipping baseline.");

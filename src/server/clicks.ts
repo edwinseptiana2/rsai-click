@@ -30,16 +30,24 @@ function parseUserAgent(userAgent: string) {
 }
 
 export const trackClick = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
+  async ({ data, request }: { data: any; request: Request }) => {
     const typedData = data as {
       linkId: number;
-      ipAddress?: string;
       userAgent?: string;
       referer?: string;
     };
+    
+    // Extract IP address from request headers
+    // Check common headers used by proxies and load balancers
+    const ipAddress = 
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') || // Cloudflare
+      null;
+    
     await db.insert(clicks).values({
       linkId: typedData.linkId,
-      ipAddress: typedData.ipAddress ?? null,
+      ipAddress: ipAddress,
       userAgent: typedData.userAgent ?? null,
       referer: typedData.referer ?? null,
     });

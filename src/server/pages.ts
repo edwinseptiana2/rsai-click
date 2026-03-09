@@ -107,3 +107,59 @@ export const deletePage = createServerFn({ method: "POST" }).handler(
     return { success: true };
   },
 );
+
+export const getPagesWithStats = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const session = await ensureSession();
+    const { clicks } = await import("../db/schema");
+    const { sql } = await import("drizzle-orm");
+    
+    // Get all pages for the user
+    const userPages = await db.query.pages.findMany({
+      where: eq(pages.userId, session.user.id),
+      orderBy: (pages, { desc }) => [desc(pages.createdAt)],
+    });
+    
+    // For each page, get link count and click count
+    const pagesWithStats = await Promise.all(
+      userPages.map(async (page) => {
+        // Get links for this page
+        const pageLinks = await db.query.links.findMany({
+          where: eq(links.pageId, page.id),
+          columns: { id: true },
+        });
+        
+        const linkCount = pageLinks.length;
+        
+        if (linkCount === 0) {
+          return {
+            ...page,
+            linkCount: 0,
+            clickCount: 0,
+          };
+        }
+        
+        const linkIds = pageLinks.map((l) => l.id);
+        
+        // Get click count for all links on this page
+        const [clickResult] = await db
+          .select({ count: sql<number>`count(*)`.as("count") })
+          .from(clicks)
+          .where(
+            sql`${clicks.linkId} IN (${sql.join(
+              linkIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})`,
+          );
+        
+        return {
+          ...page,
+          linkCount,
+          clickCount: clickResult?.count ?? 0,
+        };
+      }),
+    );
+    
+    return pagesWithStats;
+  },
+);
