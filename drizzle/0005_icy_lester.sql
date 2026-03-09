@@ -1,0 +1,1 @@
+ALTER TABLE `pages` MODIFY COLUMN `background_pattern` varchar(255) DEFAULT 'gradient-indigo-emerald';

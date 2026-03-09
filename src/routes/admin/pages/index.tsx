@@ -30,7 +30,7 @@ function PagesList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
-          <p className="text-slate-500">Manage your microsites</p>
+          <p className="text-muted-foreground">Manage your microsites</p>
         </div>
         <Link to="/admin/pages/new">
           <Button>
@@ -43,9 +43,9 @@ function PagesList() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {pages.map((page) => (
           <Link key={page.id} to={`/admin/pages/${page.id}`} className="block">
-            <div className="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer bg-white overflow-hidden">
+            <div className="flex flex-col gap-3 p-4 rounded-xl border border-border hover:border-border hover:shadow-md transition-all cursor-pointer bg-card overflow-hidden">
               {/* Profile Image */}
-              <div className="flex h-32 w-full items-center justify-center rounded-lg bg-slate-100 overflow-hidden">
+              <div className="flex h-32 w-full items-center justify-center rounded-lg bg-muted overflow-hidden">
                 {page.avatarUrl ? (
                   <img
                     src={page.avatarUrl}
@@ -59,12 +59,12 @@ function PagesList() {
               
               {/* Page Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate text-slate-900">{page.title}</p>
-                <p className="text-xs text-slate-500 truncate">rsai.click/{page.slug}</p>
+                <p className="font-semibold truncate text-foreground">{page.title}</p>
+                <p className="text-xs text-muted-foreground truncate">rsai.click/{page.slug}</p>
               </div>
               
               {/* Actions */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-2 border-t border-border">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -88,8 +88,8 @@ function PagesList() {
       </div>
 
       {pages.length === 0 && (
-        <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-xl">
-          <p className="text-slate-400 mb-4">You haven't created any pages yet</p>
+        <div className="text-center py-12 border-2 border-dashed border-border rounded-xl">
+          <p className="text-muted-foreground mb-4">You haven't created any pages yet</p>
           <Link to="/admin/pages/new">
             <Button>Create your first page</Button>
           </Link>

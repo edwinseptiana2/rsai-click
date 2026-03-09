@@ -55,7 +55,7 @@ export function LinkItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-white border border-slate-200 rounded-xl hover:shadow-md transition-all duration-200 overflow-hidden ${
+      className={`group bg-card border border-border rounded-xl hover:shadow-md transition-all duration-200 overflow-hidden ${
         isDragging ? "shadow-lg border-blue-200 ring-2 ring-blue-100" : ""
       }`}
     >
@@ -79,7 +79,7 @@ export function LinkItem({
         </div>
 
         <div className="flex-1 min-w-0 cursor-pointer" onClick={onEdit}>
-          <h3 className="text-sm font-semibold text-slate-800 truncate">
+          <h3 className="text-sm font-semibold text-foreground truncate">
             {link.title || "Untitled Link"}
           </h3>
           <p className="text-xs text-slate-400 truncate">

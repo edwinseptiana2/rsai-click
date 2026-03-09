@@ -74,7 +74,7 @@ export const pages = mysqlTable(
     bio: text("bio"),
     avatarUrl: text("avatar_url"),
     theme: varchar("theme", { length: 50 }).default("default"),
-    backgroundPattern: varchar("background_pattern", { length: 50 }).default("gradient-indigo-emerald"),
+    backgroundPattern: varchar("background_pattern", { length: 255 }).default("gradient-indigo-emerald"),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),

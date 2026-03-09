@@ -79,42 +79,47 @@ function RouteComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-slate-600">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     )
   }
 
   if (error || !page) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Page not found</h1>
-          <p className="text-slate-600">{error || 'The page you are looking for does not exist.'}</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Page not found</h1>
+          <p className="text-muted-foreground">{error || 'The page you are looking for does not exist.'}</p>
         </div>
       </div>
     )
   }
 
-  const bgPattern = BACKGROUND_PATTERNS.find(p => p.id === page.backgroundPattern) || BACKGROUND_PATTERNS[0]
+  // Check for custom gradient stored in backgroundPattern
+  const isCustomGradient = page.backgroundPattern?.startsWith('custom-gradient:')
+  const customGradientCss = isCustomGradient ? page.backgroundPattern.replace('custom-gradient:', '') : null
+  const bgPattern = isCustomGradient ? null : (BACKGROUND_PATTERNS.find(p => p.id === page.backgroundPattern) || BACKGROUND_PATTERNS[0])
 
-  const bgStyle = bgPattern.pattern
+  const bgStyle = customGradientCss
+    ? { background: customGradientCss }
+    : bgPattern?.pattern
     ? {
         backgroundColor: bgPattern.preview === "white" ? "white" : bgPattern.preview,
         backgroundImage: `url("${bgPattern.pattern}")`,
         backgroundSize: "40px 40px",
       }
-    : bgPattern.bgClass
+    : bgPattern?.bgClass
     ? {}
-    : { backgroundColor: bgPattern.preview }
+    : bgPattern ? { backgroundColor: bgPattern.preview } : {}
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 sm:p-6 ${bgPattern.bgClass || ''}`} style={bgStyle}>
+    <div className={`min-h-screen flex items-center justify-center p-4 sm:p-6 ${bgPattern?.bgClass || ''}`} style={bgStyle}>
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 space-y-6 text-center">
+        <div className="bg-card rounded-2xl shadow-lg p-6 sm:p-8 space-y-6 text-center">
           {/* Avatar */}
           <div className="flex justify-center">
-            <div className="w-24 h-24 rounded-full bg-slate-200 border-4 border-white shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
+            <div className="w-24 h-24 rounded-full bg-muted border-4 border-card shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
               {page.avatarUrl ? (
                 <img
                   src={page.avatarUrl}
@@ -129,11 +134,11 @@ function RouteComponent() {
 
           {/* Title & Bio */}
           <div className="space-y-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {page.title}
             </h1>
             {page.bio && (
-              <p className="text-base font-light text-slate-500 leading-relaxed">
+              <p className="text-base font-light text-muted-foreground leading-relaxed">
                 {page.bio}
               </p>
             )}
@@ -188,9 +193,9 @@ function RouteComponent() {
           )}
 
           {/* Footer */}
-          <div className="pt-4 border-t border-slate-200">
-            <p className="text-xs text-slate-500">
-              Created with <a href="/" className="text-slate-600 hover:text-slate-900 font-semibold">rsai.click</a>
+          <div className="pt-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Created with <a href="/" className="text-foreground hover:text-foreground/80 font-semibold">rsai.click</a>
             </p>
           </div>
         </div>

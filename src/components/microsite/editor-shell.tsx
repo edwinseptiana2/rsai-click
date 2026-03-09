@@ -93,20 +93,20 @@ export function EditorShell({
   return (
     <div className="flex flex-col lg:flex-row w-full gap-4 lg:gap-6 overflow-y-auto lg:overflow-hidden h-auto lg:h-full">
       {/* Left Panel: Editor */}
-      <div className="w-full lg:flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-auto lg:h-full">
+      <div className="w-full lg:flex-1 flex flex-col bg-card rounded-xl border border-border shadow-sm overflow-hidden h-auto lg:h-full">
         <Tabs defaultValue="components" className="flex-1 flex flex-col">
-          <div className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-3 sm:pb-4 border-b border-slate-100">
-            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10 md:h-11 p-1 bg-slate-100/50 rounded-lg">
+          <div className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-3 sm:pb-4 border-b border-border">
+            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10 md:h-11 p-1 bg-muted rounded-lg">
               <TabsTrigger
                 value="components"
-                className="rounded-md text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                className="rounded-md text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm"
               >
                 <span className="sm:hidden">Items</span>
                 <span className="hidden sm:inline">Components</span>
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="rounded-md text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                className="rounded-md text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm"
               >
                 <span className="sm:hidden">Gear</span>
                 <span className="hidden sm:inline">Settings</span>
@@ -140,7 +140,7 @@ export function EditorShell({
             >
               <div className="space-y-4 md:space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-xs sm:text-sm font-semibold text-slate-900 border-b pb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-foreground border-b pb-2">
                     Profile
                   </h3>
                   <div className="space-y-3 sm:space-y-4 pt-2">
@@ -207,7 +207,7 @@ export function EditorShell({
                       <Label htmlFor="page-bio" className="text-xs sm:text-sm">Bio</Label>
                       <textarea
                         id="page-bio"
-                        className="flex min-h-[60px] sm:min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex min-h-[60px] sm:min-h-[80px] w-full rounded-md border border-border bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={page?.bio || ""}
                         onChange={(e) =>
                           onUpdatePage?.({ bio: e.target.value })
@@ -220,7 +220,7 @@ export function EditorShell({
 
                 {/* Background Selector */}
                 <div className="space-y-2">
-                  <h3 className="text-xs sm:text-sm font-semibold text-slate-900 border-b pb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-foreground border-b pb-2">
                     Background Pattern
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
@@ -261,25 +261,25 @@ export function EditorShell({
                   {/* Random Gradient Button */}
                   <Button
                     onClick={() => {
-                      const directions = ["bg-gradient-to-r", "bg-gradient-to-l", "bg-gradient-to-t", "bg-gradient-to-b", "bg-gradient-to-tr", "bg-gradient-to-tl", "bg-gradient-to-br", "bg-gradient-to-bl"];
+                      const angles = ["to right", "to left", "to top", "to bottom", "to top right", "to top left", "to bottom right", "to bottom left", "135deg", "45deg", "225deg", "315deg"];
                       const colorSets = [
-                        ["from-red-500", "via-orange-500", "to-yellow-500"],
-                        ["from-pink-500", "via-rose-500", "to-red-500"],
-                        ["from-purple-500", "via-violet-500", "to-indigo-500"],
-                        ["from-blue-500", "via-cyan-500", "to-teal-500"],
-                        ["from-green-500", "via-emerald-500", "to-teal-500"],
-                        ["from-amber-500", "via-orange-500", "to-red-500"],
-                        ["from-fuchsia-500", "via-purple-500", "to-violet-500"],
-                        ["from-cyan-500", "via-blue-500", "to-indigo-500"],
-                        ["from-lime-500", "via-green-500", "to-emerald-500"],
-                        ["from-rose-500", "via-pink-500", "to-fuchsia-500"],
-                        ["from-sky-500", "via-blue-500", "to-indigo-500"],
-                        ["from-indigo-500", "via-purple-500", "to-pink-500"],
+                        ["#ef4444", "#f97316", "#eab308"],
+                        ["#ec4899", "#f43f5e", "#ef4444"],
+                        ["#a855f7", "#8b5cf6", "#6366f1"],
+                        ["#3b82f6", "#06b6d4", "#14b8a6"],
+                        ["#22c55e", "#10b981", "#14b8a6"],
+                        ["#f59e0b", "#f97316", "#ef4444"],
+                        ["#d946ef", "#a855f7", "#8b5cf6"],
+                        ["#06b6d4", "#3b82f6", "#6366f1"],
+                        ["#84cc16", "#22c55e", "#10b981"],
+                        ["#f43f5e", "#ec4899", "#d946ef"],
+                        ["#0ea5e9", "#3b82f6", "#6366f1"],
+                        ["#6366f1", "#a855f7", "#ec4899"],
                       ];
-                      const direction = directions[Math.floor(Math.random() * directions.length)];
-                      const colorSet = colorSets[Math.floor(Math.random() * colorSets.length)];
-                      const gradientClass = `${direction} ${colorSet.join(" ")}`;
-                      onUpdatePage?.({ backgroundPattern: `gradient-${Date.now()}`, gradientClass });
+                      const angle = angles[Math.floor(Math.random() * angles.length)];
+                      const colors = colorSets[Math.floor(Math.random() * colorSets.length)];
+                      const gradientCss = `linear-gradient(${angle}, ${colors.join(", ")})`;
+                      onUpdatePage?.({ backgroundPattern: `custom-gradient:${gradientCss}` });
                     }}
                     variant="outline"
                     className="w-full mt-2 gap-2 text-xs sm:text-sm border-slate-200 hover:bg-slate-50 hover:border-slate-300"
@@ -329,11 +329,11 @@ export function EditorShell({
       </div>
 
       {/* Right Panel: Preview */}
-      <div className="w-full lg:flex-1 flex flex-col p-4 lg:p-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-auto lg:h-full">
+      <div className="w-full lg:flex-1 flex flex-col p-4 lg:p-6 bg-card rounded-xl border border-border shadow-sm overflow-hidden h-auto lg:h-full">
        
         <div className="w-full flex flex-col lg:flex-col items-center gap-3 lg:gap-4">
           {/* URL Indicator */}
-          <div className="w-full max-w-[280px] sm:max-w-[320px] flex items-center justify-center gap-2 bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-slate-200 text-[10px] sm:text-xs font-medium text-slate-600 shadow-sm flex-shrink-0">
+          <div className="w-full max-w-[280px] sm:max-w-[320px] flex items-center justify-center gap-2 bg-card px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-border text-[10px] sm:text-xs font-medium text-muted-foreground shadow-sm flex-shrink-0">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
             <span className="truncate text-center">rsai.click/{page?.slug || "your-page"}</span>
           </div>
@@ -364,7 +364,7 @@ export function EditorShell({
               variant="outline"
               size="sm"
               onClick={handleShare}
-              className="rounded-full px-3 sm:px-5 text-xs sm:text-sm text-slate-600 border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-colors"
+              className="rounded-full px-3 sm:px-5 text-xs sm:text-sm text-muted-foreground border-border bg-card hover:bg-muted shadow-sm transition-colors"
             >
               <Share2 size={16} className="sm:w-6 sm:h-6"/>
               <span className="hidden sm:inline">Share</span>
@@ -377,13 +377,18 @@ export function EditorShell({
 }
 
 function PreviewContent({ page }: { page: any }) {
-  const bgPattern = BACKGROUND_PATTERNS.find(p => p.id === page?.backgroundPattern) || BACKGROUND_PATTERNS[0];
+  // Check for custom gradient stored in backgroundPattern
+  const isCustomGradient = page?.backgroundPattern?.startsWith('custom-gradient:');
+  const customGradientCss = isCustomGradient ? page.backgroundPattern.replace('custom-gradient:', '') : null;
+  const bgPattern = isCustomGradient ? null : (BACKGROUND_PATTERNS.find(p => p.id === page?.backgroundPattern) || BACKGROUND_PATTERNS[0]);
 
   return (
     <div
-      className={`absolute inset-0 p-3 sm:p-4 md:p-5 flex flex-col items-center text-center overflow-y-auto ${bgPattern.bgClass || "bg-white"}`}
+      className={`absolute inset-0 p-3 sm:p-4 md:p-5 flex flex-col items-center text-center overflow-y-auto ${bgPattern?.bgClass || ""}`}
       style={
-        bgPattern.pattern
+        customGradientCss
+          ? { background: customGradientCss }
+          : bgPattern?.pattern
           ? {
               backgroundColor: bgPattern.preview === "white" ? "white" : bgPattern.preview,
               backgroundImage: `url("${bgPattern.pattern}")`,

@@ -8,10 +8,12 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
+    "build:prod": "pnpm db:migrate:prod && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:prod": "npx tsx src/db/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "auth:generate": "npx auth@latest generate"
