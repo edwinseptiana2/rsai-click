@@ -1,8 +1,69 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "../db";
 import { shortLinks, shortLinkClicks } from "../db/schema";
-import { eq, sql, and, gte } from "drizzle-orm";
+import { eq, sql, and, gte, desc } from "drizzle-orm";
 import { ensureSession } from "./auth";
+
+// Types
+export type ShortLink = typeof shortLinks.$inferSelect;
+export type ShortLinkClick = typeof shortLinkClicks.$inferSelect;
+export type ShortLinkWithStats = ShortLink & { clickCount: number };
+
+export interface CreateShortLinkInput {
+  slug?: string;
+  targetUrl: string;
+  title?: string;
+  description?: string;
+}
+
+export interface UpdateShortLinkInput {
+  id: number;
+  slug?: string;
+  targetUrl?: string;
+  title?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface ShortLinkStats {
+  totalClicks: number;
+  recentClicks: number;
+  browsers: Record<string, number>;
+  operatingSystems: Record<string, number>;
+  topIPs: { ip: string; count: number }[];
+  recentClicksList: (ShortLinkClick & { browser: string; os: string })[];
+}
+
+// Server-side slug resolver - checks if slug is a short link and tracks click
+export const resolveShortLinkRedirect = createServerFn({ method: "GET" }).handler(
+  async ({ data, request }: { data: any; request: Request }) => {
+    const slug = data as string;
+    const shortLink = await db.query.shortLinks.findFirst({
+      where: (s, { and, eq: e }) => and(e(s.slug, slug), e(s.isActive, true)),
+    });
+
+    if (!shortLink) return null;
+
+    // Track the click server-side
+    const ipAddress =
+      request?.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ||
+      request?.headers?.get?.("x-real-ip") ||
+      request?.headers?.get?.("cf-connecting-ip") ||
+      null;
+    const userAgent = request?.headers?.get?.("user-agent") || null;
+    const referer = request?.headers?.get?.("referer") || null;
+
+    // Fire and forget - don't block redirect for tracking
+    db.insert(shortLinkClicks).values({
+      shortLinkId: shortLink.id,
+      ipAddress,
+      userAgent,
+      referer,
+    }).catch(() => {});
+
+    return { targetUrl: shortLink.targetUrl };
+  },
+);
 
 // Helper function to generate random slug
 function generateSlug(length: number = 6): string {
@@ -41,7 +102,7 @@ function parseUserAgent(userAgent: string) {
 }
 
 export const getShortLinks = createServerFn({ method: "GET" }).handler(
-  async () => {
+  async (): Promise<ShortLink[]> => {
     const session = await ensureSession();
     const result = await db.query.shortLinks.findMany({
       where: eq(shortLinks.userId, session.user.id),
@@ -76,12 +137,7 @@ export const getShortLinkById = createServerFn({ method: "GET" }).handler(
 
 export const createShortLink = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
-    const typedData = data as {
-      slug?: string;
-      targetUrl: string;
-      title?: string;
-      description?: string;
-    };
+    const typedData = data as CreateShortLinkInput;
     const session = await ensureSession();
 
     // Generate slug if not provided
@@ -110,20 +166,13 @@ export const createShortLink = createServerFn({ method: "POST" }).handler(
       description: typedData.description ?? null,
     });
     
-    return { id: result.insertId, slug };
+    return { id: Number(result.insertId), slug };
   },
 );
 
 export const updateShortLink = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
-    const typedData = data as {
-      id: number;
-      slug?: string;
-      targetUrl?: string;
-      title?: string;
-      description?: string;
-      isActive?: boolean;
-    };
+    const typedData = data as UpdateShortLinkInput;
     const session = await ensureSession();
     
     // Verify ownership
@@ -168,19 +217,20 @@ export const deleteShortLink = createServerFn({ method: "POST" }).handler(
   },
 );
 
+interface TrackClickInput {
+  shortLinkId: number;
+  userAgent?: string;
+  referer?: string;
+}
+
 export const trackShortLinkClick = createServerFn({ method: "POST" }).handler(
   async ({ data, request }: { data: any; request: Request }) => {
-    const typedData = data as {
-      shortLinkId: number;
-      userAgent?: string;
-      referer?: string;
-    };
-    
+    const typedData = data as TrackClickInput;
     // Extract IP address from request headers
     const ipAddress =
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      request.headers.get("x-real-ip") ||
-      request.headers.get("cf-connecting-ip") ||
+      request?.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ||
+      request?.headers?.get?.("x-real-ip") ||
+      request?.headers?.get?.("cf-connecting-ip") ||
       null;
     
     await db.insert(shortLinkClicks).values({
@@ -265,31 +315,148 @@ export const getShortLinkStats = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const getShortLinksWithStats = createServerFn({ method: "GET" }).handler(
-  async () => {
+// Dashboard stats for all short links (aggregate)
+export interface ShortLinkDashboardStats {
+  totalClicks: number;
+  recentClicks: number;
+  browsers: Record<string, number>;
+  operatingSystems: Record<string, number>;
+  topIPs: { ip: string; count: number }[];
+  recentClicksList: {
+    id: number;
+    clickedAt: Date;
+    ipAddress: string | null;
+    browser: string;
+    os: string;
+    linkTitle: string;
+    linkSlug: string;
+  }[];
+}
+
+export const getShortLinkDashboardStats = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ShortLinkDashboardStats> => {
     const session = await ensureSession();
-    
+
     // Get all short links for the user
     const userShortLinks = await db.query.shortLinks.findMany({
       where: eq(shortLinks.userId, session.user.id),
-      orderBy: (shortLinks, { desc }) => [desc(shortLinks.createdAt)],
+      columns: { id: true, title: true, slug: true },
     });
+
+    if (userShortLinks.length === 0) {
+      return {
+        totalClicks: 0,
+        recentClicks: 0,
+        browsers: {},
+        operatingSystems: {},
+        topIPs: [],
+        recentClicksList: [],
+      };
+    }
+
+    const linkIds = userShortLinks.map((l) => l.id);
+
+    // Get all clicks for these short links
+    const allClicks = await db.query.shortLinkClicks.findMany({
+      where: sql`${shortLinkClicks.shortLinkId} IN (${sql.join(
+        linkIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})`,
+    });
+
+    // Recent clicks (last 24h)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentClicksList = await db.query.shortLinkClicks.findMany({
+      where: and(
+        sql`${shortLinkClicks.shortLinkId} IN (${sql.join(
+          linkIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
+        gte(shortLinkClicks.clickedAt, oneDayAgo),
+      ),
+      limit: 20,
+      orderBy: (c, { desc: d }) => [d(c.clickedAt)],
+    });
+
+    // Aggregate statistics
+    const browsers: Record<string, number> = {};
+    const operatingSystems: Record<string, number> = {};
+    const ipMap: Record<string, number> = {};
+
+    allClicks.forEach((click) => {
+      const { browser, os } = parseUserAgent(click.userAgent || "");
+      browsers[browser] = (browsers[browser] || 0) + 1;
+      operatingSystems[os] = (operatingSystems[os] || 0) + 1;
+      if (click.ipAddress) {
+        ipMap[click.ipAddress] = (ipMap[click.ipAddress] || 0) + 1;
+      }
+    });
+
+    const topIPs = Object.entries(ipMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([ip, count]) => ({ ip, count }));
+
+    const enrichedRecentClicks = recentClicksList.map((click) => {
+      const link = userShortLinks.find((l) => l.id === click.shortLinkId);
+      const { browser, os } = parseUserAgent(click.userAgent || "");
+      return {
+        id: click.id,
+        clickedAt: click.clickedAt,
+        ipAddress: click.ipAddress,
+        browser,
+        os,
+        linkTitle: link?.title || link?.slug || "Unknown",
+        linkSlug: link?.slug || "",
+      };
+    });
+
+    return {
+      totalClicks: allClicks.length,
+      recentClicks: recentClicksList.length,
+      browsers,
+      operatingSystems,
+      topIPs,
+      recentClicksList: enrichedRecentClicks,
+    };
+  },
+);
+
+export const getShortLinksWithStats = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ShortLinkWithStats[]> => {
+    const session = await ensureSession();
     
-    // For each short link, get click count
-    const shortLinksWithStats = await Promise.all(
-      userShortLinks.map(async (shortLink) => {
-        const [clickResult] = await db
-          .select({ count: sql<number>`count(*)`.as("count") })
-          .from(shortLinkClicks)
-          .where(eq(shortLinkClicks.shortLinkId, shortLink.id));
-        
-        return {
-          ...shortLink,
-          clickCount: clickResult?.count ?? 0,
-        };
-      }),
-    );
+    // Use single query with LEFT JOIN to avoid N+1 problem
+    const results = await db
+      .select({
+        id: shortLinks.id,
+        userId: shortLinks.userId,
+        slug: shortLinks.slug,
+        targetUrl: shortLinks.targetUrl,
+        title: shortLinks.title,
+        description: shortLinks.description,
+        isActive: shortLinks.isActive,
+        createdAt: shortLinks.createdAt,
+        updatedAt: shortLinks.updatedAt,
+        clickCount: sql<number>`COALESCE(COUNT(${shortLinkClicks.id}), 0)`.as("click_count"),
+      })
+      .from(shortLinks)
+      .leftJoin(shortLinkClicks, eq(shortLinks.id, shortLinkClicks.shortLinkId))
+      .where(eq(shortLinks.userId, session.user.id))
+      .groupBy(shortLinks.id)
+      .orderBy(desc(shortLinks.createdAt));
     
-    return shortLinksWithStats;
+    return results.map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      slug: r.slug,
+      targetUrl: r.targetUrl,
+      title: r.title,
+      description: r.description,
+      isActive: r.isActive,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      clickCount: Number(r.clickCount),
+    }));
   },
 );

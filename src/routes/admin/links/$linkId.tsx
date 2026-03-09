@@ -1,26 +1,36 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { getShortLinkById } from "@/server/shortLinks";
 
-export const Route = createFileRoute("/admin/links/new")({
-  component: NewShortLink,
+export const Route = createFileRoute("/admin/links/$linkId")({
+  loader: async ({ params }) => {
+    const linkId = parseInt(params.linkId);
+    const shortLink = await getShortLinkById({ data: linkId });
+    return { shortLink };
+  },
+  component: EditShortLink,
 });
 
-function NewShortLink() {
+function EditShortLink() {
+  const { shortLink } = Route.useLoaderData();
   const navigate = useNavigate();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    targetUrl: "",
-    slug: "",
-    title: "",
-    description: "",
+    targetUrl: shortLink.targetUrl,
+    slug: shortLink.slug,
+    title: shortLink.title || "",
+    description: shortLink.description || "",
+    isActive: shortLink.isActive,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +39,6 @@ function NewShortLink() {
     setIsSubmitting(true);
 
     try {
-      // Validate target URL
       if (!formData.targetUrl) {
         setError("Target URL is required");
         return;
@@ -42,32 +51,48 @@ function NewShortLink() {
         return;
       }
 
-      // Validate slug if provided
       if (formData.slug && !/^[a-zA-Z0-9_-]+$/.test(formData.slug)) {
         setError("Slug can only contain letters, numbers, hyphens, and underscores");
         return;
       }
 
-      const { createShortLink } = await import("@/server/shortLinks");
-      const result = await createShortLink({
+      const { updateShortLink } = await import("@/server/shortLinks");
+      await updateShortLink({
         data: {
+          id: shortLink.id,
           targetUrl: formData.targetUrl,
           slug: formData.slug || undefined,
           title: formData.title || undefined,
           description: formData.description || undefined,
+          isActive: formData.isActive,
         },
       });
 
-      toast.success(`Short link created: /${result.slug}`);
-      // Navigate to links list
-      navigate({ to: "/admin/links" });
+      toast.success("Short link updated successfully");
+      router.invalidate();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create short link";
+      const message = err instanceof Error ? err.message : "Failed to update short link";
       setError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this short link? This action cannot be undone.")) return;
+
+    try {
+      const { deleteShortLink } = await import("@/server/shortLinks");
+      await deleteShortLink({ data: shortLink.id });
+      toast.success("Short link deleted");
+      navigate({ to: "/admin/links" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete short link";
+      toast.error(message);
+    }
+  };
+
+  const fullUrl = `${typeof window !== "undefined" ? window.location.origin : "rsai.click"}/${formData.slug}`;
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -77,10 +102,15 @@ function NewShortLink() {
             <ArrowLeft size={20} />
           </Button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Create Short Link</h1>
-          <p className="text-muted-foreground">Create a new short link like bit.ly</p>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold tracking-tight">Edit Short Link</h1>
+          <p className="text-muted-foreground font-mono text-sm">{fullUrl}</p>
         </div>
+        <Link to="/admin/links/stats/$linkId" params={{ linkId: String(shortLink.id) }}>
+          <Button variant="outline" size="sm">
+            Stats
+          </Button>
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-card p-6 rounded-xl border border-border">
@@ -108,10 +138,10 @@ function NewShortLink() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="slug">Custom Slug (optional)</Label>
+          <Label htmlFor="slug">Custom Slug</Label>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {typeof window !== 'undefined' ? window.location.origin : 'rsai.click'}/
+              {typeof window !== "undefined" ? window.location.origin : "rsai.click"}/
             </span>
             <Input
               id="slug"
@@ -122,9 +152,6 @@ function NewShortLink() {
               pattern="[a-zA-Z0-9_-]+"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Leave empty to auto-generate a random slug
-          </p>
         </div>
 
         <div className="space-y-2">
@@ -136,9 +163,6 @@ function NewShortLink() {
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
-          <p className="text-xs text-muted-foreground">
-            A friendly name for this link
-          </p>
         </div>
 
         <div className="space-y-2">
@@ -152,15 +176,38 @@ function NewShortLink() {
           />
         </div>
 
-        <div className="flex gap-3">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Short Link"}
-          </Button>
-          <Link to="/admin/links">
-            <Button type="button" variant="outline">
-              Cancel
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+          <div>
+            <Label htmlFor="isActive" className="text-sm font-medium">
+              Active
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              When disabled, the link will return a 404
+            </p>
+          </div>
+          <Switch
+            id="isActive"
+            checked={formData.isActive}
+            onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex gap-3">
+            <Button type="submit" disabled={isSubmitting}>
+              <Save size={16} className="mr-2" />
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
-          </Link>
+            <Link to="/admin/links">
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </Link>
+          </div>
+          <Button type="button" variant="destructive" size="sm" onClick={handleDelete}>
+            <Trash2 size={14} className="mr-2" />
+            Delete
+          </Button>
         </div>
       </form>
     </div>

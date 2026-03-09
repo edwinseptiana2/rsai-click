@@ -1,28 +1,66 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { getPageBySlug } from '@/server/pages'
 import { trackClick } from '@/server/clicks'
-import { getShortLinkBySlug, trackShortLinkClick } from '@/server/shortLinks'
+import { resolveShortLinkRedirect } from '@/server/shortLinks'
 import { getButtonStyles, ICON_MAP } from '@/components/microsite/button-templates'
 import { User, ExternalLink } from 'lucide-react'
 import { BACKGROUND_PATTERNS } from '@/components/microsite/background-patterns'
 
 export const Route = createFileRoute('/$slug')({
+  loader: async ({ params }) => {
+    // Server-side: check if it's a short link (also tracks click server-side)
+    const shortLinkResult = await resolveShortLinkRedirect({ data: params.slug })
+    if (shortLinkResult) {
+      return { type: 'redirect' as const, targetUrl: shortLinkResult.targetUrl, page: null }
+    }
+
+    // If not a short link, load as a page
+    const page = await getPageBySlug({ data: params.slug } as any)
+    if (!page) {
+      return { type: 'notfound' as const, targetUrl: null, page: null }
+    }
+    return { type: 'page' as const, targetUrl: null, page }
+  },
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { slug } = Route.useParams()
-  const [page, setPage] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const loaderData = Route.useLoaderData()
+
+  // Handle short link redirect client-side
+  useEffect(() => {
+    if (loaderData.type === 'redirect' && loaderData.targetUrl) {
+      window.location.href = loaderData.targetUrl
+    }
+  }, [loaderData])
+
+  if (loaderData.type === 'redirect') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-muted-foreground">Redirecting...</div>
+      </div>
+    )
+  }
+
+  if (loaderData.type === 'notfound' || !loaderData.page) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Page not found</h1>
+          <p className="text-muted-foreground">The page you are looking for does not exist.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const { page } = loaderData
 
   // Handle link click with tracking
   const handleLinkClick = async (e: React.MouseEvent<HTMLAnchorElement>, link: any) => {
     e.preventDefault()
     
     try {
-      // Track the click
       await trackClick({
         data: {
           linkId: link.id,
@@ -32,114 +70,9 @@ function RouteComponent() {
       })
     } catch (err) {
       console.error('Failed to track click:', err)
-      // Continue with redirect even if tracking fails
     }
     
-    // Redirect to the target URL
     window.open(link.url, '_blank', 'noopener,noreferrer')
-  }
-
-  useEffect(() => {
-    if (!slug) {
-      setError('Invalid page URL')
-      setIsLoading(false)
-      return
-    }
-
-    async function load() {
-      try {
-        // First check if it's a short link
-        const shortLink = await getShortLinkBySlug({ data: slug } as any)
-        if (shortLink) {
-          // Track the click
-          try {
-            await trackShortLinkClick({
-              data: {
-                shortLinkId: shortLink.id,
-                userAgent: navigator.userAgent,
-                referer: document.referrer || undefined,
-              }
-            })
-          } catch (err) {
-            console.error('Failed to track short link click:', err)
-          }
-          
-          // Redirect to target URL
-          window.location.href = shortLink.targetUrl
-          return
-        }
-        
-        // If not a short link, try to load as a page
-        const data = await getPageBySlug({ data: slug } as any)
-        if (!data) {
-          setError('Page not found')
-          return
-        }
-        setPage(data)
-        
-        // Update meta tags for og:image
-        if (data.avatarUrl) {
-          const ogImageMeta = document.querySelector('meta[property="og:image"]')
-          if (ogImageMeta) {
-            ogImageMeta.setAttribute('content', data.avatarUrl)
-          } else {
-            const meta = document.createElement('meta')
-            meta.setAttribute('property', 'og:image')
-            meta.setAttribute('content', data.avatarUrl)
-            document.head.appendChild(meta)
-          }
-        }
-        
-        // Update og:title
-        const ogTitleMeta = document.querySelector('meta[property="og:title"]')
-        if (ogTitleMeta) {
-          ogTitleMeta.setAttribute('content', data.title || 'Page')
-        } else {
-          const meta = document.createElement('meta')
-          meta.setAttribute('property', 'og:title')
-          meta.setAttribute('content', data.title || 'Page')
-          document.head.appendChild(meta)
-        }
-        
-        // Update og:description
-        const ogDescMeta = document.querySelector('meta[property="og:description"]')
-        if (ogDescMeta) {
-          ogDescMeta.setAttribute('content', data.bio || '')
-        } else {
-          const meta = document.createElement('meta')
-          meta.setAttribute('property', 'og:description')
-          meta.setAttribute('content', data.bio || '')
-          document.head.appendChild(meta)
-        }
-        
-        // Update document title
-        document.title = data.title || 'Page'
-      } catch (err: any) {
-        setError(err?.message || 'Failed to load page')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    load()
-  }, [slug])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
-  }
-
-  if (error || !page) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Page not found</h1>
-          <p className="text-muted-foreground">{error || 'The page you are looking for does not exist.'}</p>
-        </div>
-      </div>
-    )
   }
 
   // Check for custom gradient stored in backgroundPattern

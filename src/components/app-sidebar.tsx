@@ -13,7 +13,7 @@ import {
 } from "#/components/ui/sidebar";
 import { NavMain } from "#/components/nav-main";
 import { NavUser } from "#/components/nav-user";
-import { User, LayoutDashboard, FileText, Command } from "lucide-react";
+import { LayoutDashboard, FileText, Link2 } from "lucide-react";
 
 export function AppSidebar({
   session,
@@ -36,6 +36,11 @@ export function AppSidebar({
         title: "Pages",
         url: "/admin/pages",
         icon: FileText,
+      },
+      {
+        title: "Short Links",
+        url: "/admin/links",
+        icon: Link2,
       },
     ],
   };

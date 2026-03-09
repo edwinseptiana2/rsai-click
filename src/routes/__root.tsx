@@ -34,6 +34,7 @@ export const Route = createRootRoute({
 });
 
 import { TooltipProvider } from "#/components/ui/tooltip";
+import { Toaster } from "#/components/ui/sonner";
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -44,6 +45,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <TooltipProvider>{children}</TooltipProvider>
+        <Toaster position="top-center" richColors />
         <Scripts />
       </body>
     </html>

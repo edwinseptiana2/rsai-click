@@ -1,33 +1,50 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { getShortLinksWithStats } from "@/server/shortLinks";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { getShortLinksWithStats, type ShortLinkWithStats } from "@/server/shortLinks";
 import { Link } from "@tanstack/react-router";
-import { Plus, ExternalLink, Trash2, Copy, QrCode, BarChart3 } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Copy, QrCode, BarChart3, Download, X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 import QRCodeLib from "qrcode";
 
 export const Route = createFileRoute("/admin/links/")({
   loader: async () => {
-    const shortLinks = await getShortLinksWithStats({ data: undefined });
+    const shortLinks = await getShortLinksWithStats();
     return { shortLinks };
   },
   component: ShortLinksList,
 });
 
+interface QRModalData {
+  slug: string;
+  title: string;
+  url: string;
+  dataUrl: string;
+}
+
 function ShortLinksList() {
   const { shortLinks } = Route.useLoaderData();
-  const [showQR, setShowQR] = useState<number | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const router = useRouter();
+  const [qrModal, setQrModal] = useState<QRModalData | null>(null);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
-  const handleDelete = async (id: number, e: React.MouseEvent) => {
+  const handleDelete = async (id: number, title: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm("Are you sure you want to delete this short link?")) return;
 
-    const { deleteShortLink } = await import("@/server/shortLinks");
-    await deleteShortLink({ data: id });
-    window.location.reload();
+    setIsDeleting(id);
+    try {
+      const { deleteShortLink } = await import("@/server/shortLinks");
+      await deleteShortLink({ data: id });
+      toast.success(`"${title}" deleted successfully`);
+      router.invalidate();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete link";
+      toast.error(message);
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   const handleCopy = async (slug: string, e: React.MouseEvent) => {
@@ -36,16 +53,17 @@ function ShortLinksList() {
     const fullUrl = `${window.location.origin}/${slug}`;
     try {
       await navigator.clipboard.writeText(fullUrl);
-      alert("Link copied to clipboard!");
+      toast.success("Link copied to clipboard!");
     } catch (err) {
       console.error("Failed to copy:", err);
+      toast.error("Failed to copy link");
     }
   };
 
-  const handleShowQR = async (slug: string, e: React.MouseEvent) => {
+  const handleShowQR = async (link: ShortLinkWithStats, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const fullUrl = `${window.location.origin}/${slug}`;
+    const fullUrl = `${window.location.origin}/${link.slug}`;
     
     try {
       const dataUrl = await QRCodeLib.toDataURL(fullUrl, {
@@ -56,25 +74,30 @@ function ShortLinksList() {
           light: "#FFFFFF",
         },
       });
-      setQrDataUrl(dataUrl);
-      setShowQR(Date.now()); // Use timestamp as unique ID
+      setQrModal({
+        slug: link.slug,
+        title: link.title || link.slug,
+        url: fullUrl,
+        dataUrl,
+      });
     } catch (err) {
       console.error("Failed to generate QR code:", err);
+      toast.error("Failed to generate QR code");
     }
   };
 
   const handleDownloadQR = () => {
-    if (!qrDataUrl) return;
+    if (!qrModal) return;
     
     const link = document.createElement("a");
-    link.download = `qrcode-${Date.now()}.png`;
-    link.href = qrDataUrl;
+    link.download = `qrcode-${qrModal.slug}.png`;
+    link.href = qrModal.dataUrl;
     link.click();
+    toast.success("QR code downloaded!");
   };
 
   const handleCloseQR = () => {
-    setShowQR(null);
-    setQrDataUrl("");
+    setQrModal(null);
   };
 
   return (
@@ -96,6 +119,7 @@ function ShortLinksList() {
         <div className="space-y-3">
           {shortLinks.map((link) => {
             const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/${link.slug}`;
+            const linkTitle = link.title || link.slug;
             
             return (
               <div
@@ -105,14 +129,14 @@ function ShortLinksList() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="text-sm font-semibold text-foreground truncate">
-                      {link.title || link.slug}
+                      {linkTitle}
                     </h4>
                     {link.isActive ? (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 rounded-full">
                         Active
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground rounded-full">
                         Inactive
                       </span>
                     )}
@@ -129,8 +153,26 @@ function ShortLinksList() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
+                  <Link
+                    to="/admin/links/stats/$linkId"
+                    params={{ linkId: String(link.id) }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                  >
+                    <BarChart3 size={14} />
+                    Stats
+                  </Link>
+                  <Link
+                    to="/admin/links/$linkId"
+                    params={{ linkId: String(link.id) }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                  >
+                    <Pencil size={14} />
+                    Edit
+                  </Link>
                   <button
-                    onClick={(e) => handleShowQR(link.slug, e)}
+                    onClick={(e) => handleShowQR(link, e)}
                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
                   >
                     <QrCode size={14} />
@@ -154,8 +196,9 @@ function ShortLinksList() {
                     Visit
                   </a>
                   <button
-                    onClick={(e) => handleDelete(link.id, e)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                    onClick={(e) => handleDelete(link.id, linkTitle, e)}
+                    disabled={isDeleting === link.id}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-md transition-colors disabled:opacity-50"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -176,33 +219,52 @@ function ShortLinksList() {
       )}
 
       {/* QR Code Modal */}
-      {showQR && qrDataUrl && (
+      {qrModal && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={handleCloseQR}
         >
           <div
-            className="bg-card rounded-xl p-6 max-w-sm w-full shadow-2xl"
+            className="bg-card rounded-xl p-6 max-w-sm w-full shadow-2xl border border-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
-              QR Code
-            </h3>
-            <div className="flex justify-center mb-4">
-              <img src={qrDataUrl} alt="QR Code" className="w-full max-w-xs rounded-lg" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">
+                QR Code
+              </h3>
+              <button
+                onClick={handleCloseQR}
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X size={18} />
+              </button>
             </div>
+            
+            <div className="text-center mb-4">
+              <p className="text-sm font-medium text-foreground truncate">{qrModal.title}</p>
+              <p className="text-xs text-muted-foreground truncate">{qrModal.url}</p>
+            </div>
+            
+            <div className="flex justify-center mb-4 bg-white p-4 rounded-lg">
+              <img src={qrModal.dataUrl} alt="QR Code" className="w-full max-w-[250px]" />
+            </div>
+            
             <div className="flex gap-2">
               <button
                 onClick={handleDownloadQR}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
               >
-                Download QR Code
+                <Download size={16} />
+                Download PNG
               </button>
               <button
-                onClick={handleCloseQR}
-                className="px-4 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(qrModal.url);
+                  toast.success("Link copied!");
+                }}
+                className="px-4 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
               >
-                Close
+                <Copy size={16} />
               </button>
             </div>
           </div>
