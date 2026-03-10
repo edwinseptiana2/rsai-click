@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { db } from "../db";
 import { pages, links } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -13,9 +14,10 @@ export const getPages = createServerFn({ method: "GET" }).handler(async () => {
   return result;
 });
 
-export const getPageById = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const id = data as number;
+export const getPageById = createServerFn({ method: "GET" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const id = data;
     const session = await ensureSession();
     const page = await db.query.pages.findFirst({
       where: (p, { and, eq: e }) =>
@@ -41,9 +43,10 @@ export const getPageById = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const getPageBySlug = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const slug = data as string;
+export const getPageBySlug = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data }) => {
+    const slug = data;
     const page = await db.query.pages.findFirst({
       where: (p, { and, eq: e }) => and(e(p.slug, slug), e(p.isActive, true)),
     });
@@ -58,15 +61,18 @@ export const getPageBySlug = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const createPage = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as {
-      slug: string;
-      title: string;
-      bio?: string;
-      avatarUrl?: string;
-      theme?: string;
-    };
+export const createPage = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      slug: z.string(),
+      title: z.string(),
+      bio: z.string().optional().nullable(),
+      avatarUrl: z.string().optional().nullable(),
+      theme: z.string().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     const session = await ensureSession();
     const [result] = await db.insert(pages).values({
       userId: session.user.id,
@@ -80,18 +86,21 @@ export const createPage = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const updatePage = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as {
-      id: number;
-      slug?: string;
-      title?: string;
-      bio?: string;
-      avatarUrl?: string;
-      theme?: string;
-      backgroundPattern?: string;
-      isActive?: boolean;
-    };
+export const updatePage = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.number(),
+      slug: z.string().optional(),
+      title: z.string().optional(),
+      bio: z.string().optional().nullable(),
+      avatarUrl: z.string().optional().nullable(),
+      theme: z.string().optional(),
+      backgroundPattern: z.string().optional().nullable(),
+      isActive: z.boolean().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     await ensureSession();
     const { id, ...updates } = typedData;
     await db.update(pages).set(updates).where(eq(pages.id, id));
@@ -99,9 +108,10 @@ export const updatePage = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const deletePage = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const id = data as number;
+export const deletePage = createServerFn({ method: "POST" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const id = data;
     await ensureSession();
     await db.delete(pages).where(eq(pages.id, id));
     return { success: true };

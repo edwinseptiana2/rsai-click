@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
+import { z } from "zod";
 import { db } from "../db";
 import { clicks, links, pages } from "../db/schema";
 import { eq, sql, and, gte } from "drizzle-orm";
@@ -29,35 +31,42 @@ function parseUserAgent(userAgent: string) {
   return { browser, os };
 }
 
-export const trackClick = createServerFn({ method: "POST" }).handler(
-  async ({ data, request }: { data: any; request: Request }) => {
-    const typedData = data as {
-      linkId: number;
-      userAgent?: string;
-      referer?: string;
-    };
-    
+export const trackClick = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      linkId: z.number(),
+      userAgent: z.string().optional(),
+      referer: z.string().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
+    const headers = getRequestHeaders();
+
     // Extract IP address from request headers
     // Check common headers used by proxies and load balancers
-    const ipAddress = 
-      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-      request.headers.get('x-real-ip') ||
-      request.headers.get('cf-connecting-ip') || // Cloudflare
+    const ipAddress =
+      headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      headers.get("x-real-ip") ||
+      headers.get("cf-connecting-ip") || // Cloudflare
       null;
-    
+
+    const userAgent = headers.get("user-agent") || null;
+    const referer = headers.get("referer") || null;
+
     await db.insert(clicks).values({
       linkId: typedData.linkId,
       ipAddress: ipAddress,
-      userAgent: typedData.userAgent ?? null,
-      referer: typedData.referer ?? null,
+      userAgent: typedData.userAgent ?? userAgent,
+      referer: typedData.referer ?? referer,
     });
     return { success: true };
-  },
-);
+  });
 
-export const getClickStats = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const pageId = data as number;
+export const getClickStats = createServerFn({ method: "GET" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const pageId = data;
     // Get total clicks per link for this page
     const pageLinks = await db.query.links.findMany({
       where: eq(links.pageId, pageId),

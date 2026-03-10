@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
+import { z } from "zod";
 import { db } from "../db";
 import { shortLinks, shortLinkClicks } from "../db/schema";
 import { eq, sql, and, gte, desc } from "drizzle-orm";
@@ -35,9 +37,11 @@ export interface ShortLinkStats {
 }
 
 // Server-side slug resolver - checks if slug is a short link and tracks click
-export const resolveShortLinkRedirect = createServerFn({ method: "GET" }).handler(
-  async ({ data, request }: { data: any; request: Request }) => {
-    const slug = data as string;
+export const resolveShortLinkRedirect = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data }) => {
+    const slug = data;
+    const headers = getRequestHeaders();
     const shortLink = await db.query.shortLinks.findFirst({
       where: (s, { and, eq: e }) => and(e(s.slug, slug), e(s.isActive, true)),
     });
@@ -46,12 +50,12 @@ export const resolveShortLinkRedirect = createServerFn({ method: "GET" }).handle
 
     // Track the click server-side
     const ipAddress =
-      request?.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ||
-      request?.headers?.get?.("x-real-ip") ||
-      request?.headers?.get?.("cf-connecting-ip") ||
+      headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      headers.get("x-real-ip") ||
+      headers.get("cf-connecting-ip") ||
       null;
-    const userAgent = request?.headers?.get?.("user-agent") || null;
-    const referer = request?.headers?.get?.("referer") || null;
+    const userAgent = headers.get("user-agent") || null;
+    const referer = headers.get("referer") || null;
 
     // Fire and forget - don't block redirect for tracking
     db.insert(shortLinkClicks).values({
@@ -112,9 +116,10 @@ export const getShortLinks = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const getShortLinkBySlug = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const slug = data as string;
+export const getShortLinkBySlug = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data }) => {
+    const slug = data;
     const shortLink = await db.query.shortLinks.findFirst({
       where: (s, { and, eq: e }) => and(e(s.slug, slug), e(s.isActive, true)),
     });
@@ -122,9 +127,10 @@ export const getShortLinkBySlug = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const getShortLinkById = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const id = data as number;
+export const getShortLinkById = createServerFn({ method: "GET" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const id = data;
     const session = await ensureSession();
     const shortLink = await db.query.shortLinks.findFirst({
       where: (s, { and, eq: e }) =>
@@ -135,9 +141,17 @@ export const getShortLinkById = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const createShortLink = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as CreateShortLinkInput;
+export const createShortLink = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      slug: z.string().optional(),
+      targetUrl: z.string().url(),
+      title: z.string().optional().nullable(),
+      description: z.string().optional().nullable(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     const session = await ensureSession();
 
     // Generate slug if not provided
@@ -170,9 +184,19 @@ export const createShortLink = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const updateShortLink = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as UpdateShortLinkInput;
+export const updateShortLink = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.number(),
+      slug: z.string().optional(),
+      targetUrl: z.string().url().optional(),
+      title: z.string().optional().nullable(),
+      description: z.string().optional().nullable(),
+      isActive: z.boolean().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     const session = await ensureSession();
     
     // Verify ownership
@@ -199,9 +223,10 @@ export const updateShortLink = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const deleteShortLink = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const id = data as number;
+export const deleteShortLink = createServerFn({ method: "POST" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const id = data;
     const session = await ensureSession();
     
     // Verify ownership
@@ -217,36 +242,44 @@ export const deleteShortLink = createServerFn({ method: "POST" }).handler(
   },
 );
 
-interface TrackClickInput {
-  shortLinkId: number;
-  userAgent?: string;
-  referer?: string;
-}
 
-export const trackShortLinkClick = createServerFn({ method: "POST" }).handler(
-  async ({ data, request }: { data: any; request: Request }) => {
-    const typedData = data as TrackClickInput;
+
+export const trackShortLinkClick = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      shortLinkId: z.number(),
+      userAgent: z.string().optional(),
+      referer: z.string().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
+    const headers = getRequestHeaders();
     // Extract IP address from request headers
     const ipAddress =
-      request?.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ||
-      request?.headers?.get?.("x-real-ip") ||
-      request?.headers?.get?.("cf-connecting-ip") ||
+      headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      headers.get("x-real-ip") ||
+      headers.get("cf-connecting-ip") ||
       null;
     
+    const userAgent = headers.get("user-agent") || null;
+    const referer = headers.get("referer") || null;
+
     await db.insert(shortLinkClicks).values({
       shortLinkId: typedData.shortLinkId,
       ipAddress: ipAddress,
-      userAgent: typedData.userAgent ?? null,
-      referer: typedData.referer ?? null,
+      userAgent: typedData.userAgent ?? userAgent,
+      referer: typedData.referer ?? referer,
     });
     
     return { success: true };
   },
 );
 
-export const getShortLinkStats = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const shortLinkId = data as number;
+export const getShortLinkStats = createServerFn({ method: "GET" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const shortLinkId = data;
     const session = await ensureSession();
     
     // Verify ownership

@@ -1,12 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { db } from "../db";
 import { links } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { ensureSession } from "./auth";
 
-export const getLinksByPageId = createServerFn({ method: "GET" }).handler(
-  async ({ data }: { data: any }) => {
-    const pageId = data as number;
+export const getLinksByPageId = createServerFn({ method: "GET" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const pageId = data;
     await ensureSession();
     const result = await db.query.links.findMany({
       where: eq(links.pageId, pageId),
@@ -16,18 +18,27 @@ export const getLinksByPageId = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const createLink = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as {
-      pageId: number;
-      title: string;
-      url: string;
-      icon?: string;
-      customIcon?: { type: string; value: string };
-      color?: string;
-      textColor?: string;
-      position?: number;
-    };
+export const createLink = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      pageId: z.number(),
+      title: z.string(),
+      url: z.string(),
+      icon: z.string().optional().nullable(),
+      customIcon: z
+        .object({
+          type: z.string(),
+          value: z.string(),
+        })
+        .optional()
+        .nullable(),
+      color: z.string().optional(),
+      textColor: z.string().optional(),
+      position: z.number().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     await ensureSession();
     const [result] = await db.insert(links).values({
       pageId: typedData.pageId,
@@ -43,19 +54,28 @@ export const createLink = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const updateLink = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as {
-      id: number;
-      title?: string;
-      url?: string;
-      icon?: string;
-      customIcon?: { type: string; value: string };
-      color?: string;
-      textColor?: string;
-      position?: number;
-      isActive?: boolean;
-    };
+export const updateLink = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      url: z.string().optional(),
+      icon: z.string().optional().nullable(),
+      customIcon: z
+        .object({
+          type: z.string(),
+          value: z.string(),
+        })
+        .optional()
+        .nullable(),
+      color: z.string().optional(),
+      textColor: z.string().optional(),
+      position: z.number().optional(),
+      isActive: z.boolean().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     await ensureSession();
     const { id, customIcon, ...updates } = typedData;
     const setData: any = { ...updates };
@@ -67,18 +87,25 @@ export const updateLink = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const deleteLink = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const id = data as number;
+export const deleteLink = createServerFn({ method: "POST" })
+  .inputValidator(z.number())
+  .handler(async ({ data }) => {
+    const id = data;
     await ensureSession();
     await db.delete(links).where(eq(links.id, id));
     return { success: true };
   },
 );
 
-export const reorderLinks = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    const typedData = data as { pageId: number; orderedIds: number[] };
+export const reorderLinks = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      pageId: z.number(),
+      orderedIds: z.array(z.number()),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const typedData = data;
     await ensureSession();
     const updates = typedData.orderedIds.map((linkId, index) =>
       db.update(links).set({ position: index }).where(eq(links.id, linkId)),
