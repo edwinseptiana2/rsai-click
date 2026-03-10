@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/pages/new")({
   component: NewPage,
@@ -29,9 +30,10 @@ function NewPage() {
         data: { title, slug },
       });
       navigate({ to: `/admin/pages/${result.id}` });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to create page");
+      const errorMessage = err?.message || "Failed to create page";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

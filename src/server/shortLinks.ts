@@ -127,6 +127,19 @@ export const getShortLinkBySlug = createServerFn({ method: "GET" })
   },
 );
 
+export const checkShortLinkSlugAvailability = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ slug: z.string(), excludeId: z.number().optional() }))
+  .handler(async ({ data }) => {
+    const { slug, excludeId } = data;
+    const existing = await db.query.shortLinks.findFirst({
+      where: (s, { and, eq: e, ne }) => 
+        excludeId 
+          ? and(e(s.slug, slug), ne(s.id, excludeId))
+          : e(s.slug, slug),
+    });
+    return { available: !existing };
+  });
+
 export const getShortLinkById = createServerFn({ method: "GET" })
   .inputValidator(z.number())
   .handler(async ({ data }) => {
@@ -154,22 +167,33 @@ export const createShortLink = createServerFn({ method: "POST" })
     const typedData = data;
     const session = await ensureSession();
 
-    // Generate slug if not provided
-    let slug = typedData.slug || generateSlug(6);
-    
-    // Check if slug already exists, if so generate new one
-    let attempts = 0;
-    while (attempts < 10) {
+    let slug: string;
+    if (typedData.slug) {
       const existing = await db.query.shortLinks.findFirst({
-        where: eq(shortLinks.slug, slug),
+        where: eq(shortLinks.slug, typedData.slug),
       });
-      if (!existing) break;
+      if (existing) {
+        throw new Error(`Slug "${typedData.slug}" is already taken.`);
+      }
+      slug = typedData.slug;
+    } else {
+      // Generate slug if not provided
       slug = generateSlug(6);
-      attempts++;
-    }
-    
-    if (attempts >= 10) {
-      throw new Error("Failed to generate unique slug");
+      
+      // Check if slug already exists, if so generate new one
+      let attempts = 0;
+      while (attempts < 10) {
+        const existing = await db.query.shortLinks.findFirst({
+          where: eq(shortLinks.slug, slug),
+        });
+        if (!existing) break;
+        slug = generateSlug(6);
+        attempts++;
+      }
+      
+      if (attempts >= 10) {
+        throw new Error("Failed to generate unique slug");
+      }
     }
 
     const [result] = await db.insert(shortLinks).values({
@@ -213,7 +237,7 @@ export const updateShortLink = createServerFn({ method: "POST" })
         where: eq(shortLinks.slug, typedData.slug),
       });
       if (slugExists) {
-        throw new Error("Slug already exists");
+        throw new Error(`Slug "${typedData.slug}" is already taken.`);
       }
     }
     

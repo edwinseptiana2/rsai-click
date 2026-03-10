@@ -1,0 +1,1 @@
+ALTER TABLE `pages` ADD `text_color` varchar(50) DEFAULT 'default';

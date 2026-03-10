@@ -61,6 +61,19 @@ export const getPageBySlug = createServerFn({ method: "GET" })
   },
 );
 
+export const checkSlugAvailability = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ slug: z.string(), excludeId: z.number().optional() }))
+  .handler(async ({ data }) => {
+    const { slug, excludeId } = data;
+    const existing = await db.query.pages.findFirst({
+      where: (p, { and, eq: e, ne }) => 
+        excludeId 
+          ? and(e(p.slug, slug), ne(p.id, excludeId))
+          : e(p.slug, slug),
+    });
+    return { available: !existing };
+  });
+
 export const createPage = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -69,11 +82,23 @@ export const createPage = createServerFn({ method: "POST" })
       bio: z.string().optional().nullable(),
       avatarUrl: z.string().optional().nullable(),
       theme: z.string().optional(),
+      textColor: z.string().optional(),
+      titleColor: z.string().optional(),
+      bioColor: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
     const typedData = data;
     const session = await ensureSession();
+
+    // Check slug uniqueness
+    const existing = await db.query.pages.findFirst({
+      where: eq(pages.slug, typedData.slug),
+    });
+    if (existing) {
+      throw new Error(`Slug "${typedData.slug}" is already taken.`);
+    }
+
     const [result] = await db.insert(pages).values({
       userId: session.user.id,
       slug: typedData.slug,
@@ -81,6 +106,9 @@ export const createPage = createServerFn({ method: "POST" })
       bio: typedData.bio ?? null,
       avatarUrl: typedData.avatarUrl ?? null,
       theme: typedData.theme ?? "default",
+      textColor: typedData.textColor ?? "default",
+      titleColor: typedData.titleColor ?? "default",
+      bioColor: typedData.bioColor ?? "default",
     });
     return { id: result.insertId };
   },
@@ -96,6 +124,9 @@ export const updatePage = createServerFn({ method: "POST" })
       avatarUrl: z.string().optional().nullable(),
       theme: z.string().optional(),
       backgroundPattern: z.string().optional().nullable(),
+      textColor: z.string().optional(),
+      titleColor: z.string().optional(),
+      bioColor: z.string().optional(),
       isActive: z.boolean().optional(),
     }),
   )
@@ -103,6 +134,17 @@ export const updatePage = createServerFn({ method: "POST" })
     const typedData = data;
     await ensureSession();
     const { id, ...updates } = typedData;
+
+    // If slug is being updated, check uniqueness
+    if (updates.slug) {
+      const existing = await db.query.pages.findFirst({
+        where: (p, { and, eq: e, ne }) => and(e(p.slug, updates.slug as string), ne(p.id, id)),
+      });
+      if (existing) {
+        throw new Error(`Slug "${updates.slug}" is already taken.`);
+      }
+    }
+
     await db.update(pages).set(updates).where(eq(pages.id, id));
     return { success: true };
   },

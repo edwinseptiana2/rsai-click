@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { BUTTON_TEMPLATES, BUTTON_COLORS, TEXT_COLORS, ICON_MAP, getButtonStyles } from "@/components/microsite/button-templates";
+import { toast } from "sonner";
 
 export function MicrositeEditor({ pageId }: { pageId: number }) {
   const [page, setPage] = useState<any>(null);
@@ -141,11 +142,20 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
   };
 
   const handleUpdatePage = async (updates: any) => {
+    const previousPage = { ...page };
+    // Optimistically update the UI
     setPage((prev: any) => ({ ...prev, ...updates }));
+    
     try {
       await updatePageFn({ data: { id: pageId, ...updates } });
-    } catch (err) {
-      console.error(err);
+      // On success, we can show a brief success toast if needed, but usually silent is better for micro-updates
+    } catch (err: any) {
+      console.error("Update failed:", err);
+      // Revert state on error
+      setPage(previousPage);
+      
+      const errorMessage = err?.message || "Failed to update page";
+      toast.error(errorMessage);
     }
   };
 

@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { getPageBySlug } from '@/server/pages'
 import { trackClick } from '@/server/clicks'
 import { resolveShortLinkRedirect } from '@/server/shortLinks'
-import { getButtonStyles, ICON_MAP } from '@/components/microsite/button-templates'
+import { getButtonStyles, ICON_MAP, TEXT_COLORS } from '@/components/microsite/button-templates'
 import { User, ExternalLink } from 'lucide-react'
 import { BACKGROUND_PATTERNS } from '@/components/microsite/background-patterns'
 
@@ -77,7 +77,7 @@ function RouteComponent() {
 
   // Check for custom gradient stored in backgroundPattern
   const isCustomGradient = page.backgroundPattern?.startsWith('custom-gradient:')
-  const customGradientCss = isCustomGradient ? page.backgroundPattern.replace('custom-gradient:', '') : null
+  const customGradientCss = isCustomGradient ? page.backgroundPattern?.replace('custom-gradient:', '') : null
   const bgPattern = isCustomGradient ? null : (BACKGROUND_PATTERNS.find(p => p.id === page.backgroundPattern) || BACKGROUND_PATTERNS[0])
 
   const bgStyle = customGradientCss
@@ -94,8 +94,7 @@ function RouteComponent() {
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 sm:p-6 ${bgPattern?.bgClass || ''}`} style={bgStyle}>
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl shadow-lg p-6 sm:p-8 space-y-6 text-center">
+      <div className="w-full max-w-md space-y-6 text-center">
           {/* Avatar */}
           <div className="flex justify-center">
             <div className="w-24 h-24 rounded-full bg-muted border-4 border-card shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
@@ -113,11 +112,19 @@ function RouteComponent() {
 
           {/* Title & Bio */}
           <div className="space-y-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <h1 className={`text-2xl sm:text-3xl font-bold line-clamp-2 ${
+              page.titleColor && page.titleColor !== "default"
+                ? TEXT_COLORS.find(c => c.id === page.titleColor)?.class || "text-foreground"
+                : (page.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-foreground")
+            }`} style={page.titleColor && page.titleColor !== "default" ? TEXT_COLORS.find(c => c.id === page.titleColor)?.style : (page.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.style : {})}>
               {page.title}
             </h1>
             {page.bio && (
-              <p className="text-base font-light text-muted-foreground leading-relaxed">
+              <p className={`text-base font-light leading-relaxed line-clamp-4 ${
+                page.bioColor && page.bioColor !== "default"
+                  ? TEXT_COLORS.find(c => c.id === page.bioColor)?.class || "text-muted-foreground"
+                  : (page.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-muted-foreground")
+              }`} style={page.bioColor && page.bioColor !== "default" ? TEXT_COLORS.find(c => c.id === page.bioColor)?.style : (page.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.style : {})}>
                 {page.bio}
               </p>
             )}
@@ -171,15 +178,14 @@ function RouteComponent() {
           )}
 
           {/* Footer */}
-          <div className="pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground">
-              Created with <a href="/" className="text-foreground hover:text-foreground/80 font-semibold">rsai.click</a>
+          <div className="pt-4 border-t border-white/10">
+            <p className="text-xs text-white/40 font-light">
+              Created with <a href="/" className="text-white/60 hover:text-white font-semibold">rsai.click</a>
             </p>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
 }
 
 export default RouteComponent

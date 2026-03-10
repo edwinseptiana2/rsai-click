@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { getShortLinkById } from "@/server/shortLinks";
+import { getShortLinkById, checkShortLinkSlugAvailability } from "@/server/shortLinks";
+import { Loader2, Check, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import React from "react";
 
 export const Route = createFileRoute("/admin/links/$linkId")({
   loader: async ({ params }) => {
@@ -32,6 +35,44 @@ function EditShortLink() {
     description: shortLink.description || "",
     isActive: shortLink.isActive,
   });
+
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
+  const checkSlugFn = useServerFn(checkShortLinkSlugAvailability);
+
+  // Debounced slug check
+  React.useEffect(() => {
+    if (!formData.slug || formData.slug === shortLink.slug) {
+      setIsSlugAvailable(null);
+      setIsCheckingSlug(false);
+      return;
+    }
+
+    // Basic format validation before server check
+    if (!/^[a-zA-Z0-9_-]+$/.test(formData.slug)) {
+      setIsSlugAvailable(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingSlug(true);
+      try {
+        const result = await checkSlugFn({ 
+          data: { 
+            slug: formData.slug,
+            excludeId: shortLink.id
+          } 
+        });
+        setIsSlugAvailable(result.available);
+      } catch (err) {
+        console.error("Check slug error:", err);
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.slug, shortLink.slug, shortLink.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +113,7 @@ function EditShortLink() {
       router.invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to update short link";
-      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -139,18 +180,49 @@ function EditShortLink() {
 
         <div className="space-y-2">
           <Label htmlFor="slug">Custom Slug</Label>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {typeof window !== "undefined" ? window.location.origin : "rsai.click"}/
-            </span>
-            <Input
-              id="slug"
-              type="text"
-              placeholder="my-link"
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              pattern="[a-zA-Z0-9_-]+"
-            />
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                {typeof window !== "undefined" ? window.location.origin : "rsai.click"}/
+              </span>
+              <div className="relative flex-1">
+                <Input
+                  id="slug"
+                  type="text"
+                  placeholder="my-link"
+                  value={formData.slug}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^a-zA-Z0-9_-]/g, "");
+                    setFormData({ ...formData, slug: val });
+                  }}
+                  className={`pr-10 ${
+                    formData.slug !== shortLink.slug && isSlugAvailable === false ? "border-red-500 focus-visible:ring-red-500" : 
+                    formData.slug !== shortLink.slug && isSlugAvailable === true ? "border-green-500 focus-visible:ring-green-500" : ""
+                  }`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                  {isCheckingSlug && (
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                  )}
+                  {!isCheckingSlug && formData.slug !== shortLink.slug && isSlugAvailable === true && (
+                    <Check className="w-4 h-4 text-green-500" />
+                  )}
+                  {!isCheckingSlug && formData.slug !== shortLink.slug && isSlugAvailable === false && (
+                    <X className="w-4 h-4 text-red-500" />
+                  )}
+                </div>
+              </div>
+            </div>
+            {formData.slug !== shortLink.slug && isSlugAvailable === false && formData.slug && (
+              <p className="text-[10px] text-red-500">
+                {!/^[a-zA-Z0-9_-]+$/.test(formData.slug) 
+                  ? "Slug can only contain letters, numbers, hyphens, and underscores"
+                  : "This slug is already taken."}
+              </p>
+            )}
+            {formData.slug !== shortLink.slug && isSlugAvailable === true && (
+              <p className="text-[10px] text-green-600">This slug is available!</p>
+            )}
           </div>
         </div>
 

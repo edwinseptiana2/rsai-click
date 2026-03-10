@@ -3,11 +3,12 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, User, Link, ExternalLink, Share2 } from "lucide-react";
+import { Plus, User, Link, ExternalLink, Share2, Check, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ICON_MAP, getButtonStyles } from "@/components/microsite/button-templates";
+import { ICON_MAP, getButtonStyles, TEXT_COLORS } from "@/components/microsite/button-templates";
 import { BACKGROUND_PATTERNS } from "@/components/microsite/background-patterns";
+import { checkSlugAvailability } from "@/server/pages";
 
 // Helper function to convert file to base64 data URL
 async function handleImageUpload(
@@ -43,6 +44,45 @@ export function EditorShell({
   onUpdatePage?: (updates: any) => void;
   children: React.ReactNode;
 }) {
+  const [isSlugAvailable, setIsSlugAvailable] = React.useState<boolean | null>(null);
+  const [isCheckingSlug, setIsCheckingSlug] = React.useState(false);
+  const [slugInput, setSlugInput] = React.useState(page?.slug || "");
+
+  // Update slugInput when page.slug changes (e.g. on mount or after save)
+  React.useEffect(() => {
+    if (page?.slug && page.slug !== slugInput) {
+      setSlugInput(page.slug);
+      setIsSlugAvailable(null);
+    }
+  }, [page?.slug]);
+
+  // Debounced slug availability check
+  React.useEffect(() => {
+    if (!slugInput || slugInput === page?.slug) {
+      setIsSlugAvailable(null);
+      setIsCheckingSlug(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingSlug(true);
+      try {
+        const result = await checkSlugAvailability({ 
+          data: {
+            slug: slugInput, 
+            excludeId: page?.id 
+          }
+        });
+        setIsSlugAvailable(result.available);
+      } catch (error) {
+        console.error("Error checking slug availability:", error);
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [slugInput, page?.slug, page?.id]);
   const [previewKey, setPreviewKey] = React.useState(0);
   const [showPreviewMobile, setShowPreviewMobile] = React.useState(false);
   const [shareToast, setShareToast] = React.useState<{ show: boolean; message: string }>({ show: false, message: "" });
@@ -215,6 +255,48 @@ export function EditorShell({
                         placeholder="Tell us about yourself"
                       />
                     </div>
+                    
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm">Title Color</Label>
+                      <div className="grid grid-cols-7 gap-2">
+                        {TEXT_COLORS.map((textColor) => (
+                          <button
+                            key={textColor.id}
+                            type="button"
+                            onClick={() => onUpdatePage?.({ titleColor: textColor.id })}
+                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold transition-all ${
+                              page?.titleColor === textColor.id || (!page?.titleColor && textColor.id === 'default')
+                                ? "ring-2 ring-offset-2 ring-slate-400 scale-110" 
+                                : "hover:scale-105"
+                            } ${textColor.id === 'white' ? 'bg-slate-800' : 'bg-white'}`}
+                            title={textColor.name}
+                          >
+                            <span className={textColor.class} style={textColor.style}>Aa</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm">Bio Color</Label>
+                      <div className="grid grid-cols-7 gap-2">
+                        {TEXT_COLORS.map((textColor) => (
+                          <button
+                            key={textColor.id}
+                            type="button"
+                            onClick={() => onUpdatePage?.({ bioColor: textColor.id })}
+                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold transition-all ${
+                              page?.bioColor === textColor.id || (!page?.bioColor && textColor.id === 'default')
+                                ? "ring-2 ring-offset-2 ring-slate-400 scale-110" 
+                                : "hover:scale-105"
+                            } ${textColor.id === 'white' ? 'bg-slate-800' : 'bg-white'}`}
+                            title={textColor.name}
+                          >
+                            <span className={textColor.class} style={textColor.style}>Aa</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -308,17 +390,59 @@ export function EditorShell({
                     Danger Zone
                   </h3>
                   <div className="pt-2">
-                    <p className="text-[10px] sm:text-xs text-slate-500 mb-2">
-                      Changing the slug will break existing links.
+                    <p className="text-[10px] sm:text-xs text-red-600 mb-2 font-medium">
+                      ⚠️ Changing the slug will break existing links to this page.
                     </p>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={page?.slug || ""}
-                        onChange={(e) =>
-                          onUpdatePage?.({ slug: e.target.value })
-                        }
-                        className="font-mono text-[10px] sm:text-xs"
-                      />
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Slug Baru</Label>
+                      <div className="relative">
+                        <Input
+                          value={slugInput}
+                          onChange={(e) => {
+                            const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                            setSlugInput(val);
+                            // We don't call onUpdatePage directly here because we want to validate first
+                          }}
+                          className={`font-mono text-[10px] sm:text-xs pr-10 ${
+                            isSlugAvailable === false ? "border-red-500 focus-visible:ring-red-500" : 
+                            isSlugAvailable === true ? "border-green-500 focus-visible:ring-green-500" : ""
+                          }`}
+                          placeholder="new-slug-name"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                          {isCheckingSlug && (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                          )}
+                          {!isCheckingSlug && isSlugAvailable === true && (
+                            <Check className="w-3.5 h-3.5 text-green-500" />
+                          )}
+                          {!isCheckingSlug && isSlugAvailable === false && (
+                            <X className="w-3.5 h-3.5 text-red-500" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {isSlugAvailable === false && (
+                        <p className="text-[10px] text-red-500 mt-1">This slug is already taken.</p>
+                      )}
+                      {isSlugAvailable === true && (
+                        <p className="text-[10px] text-green-600 mt-1">This slug is available!</p>
+                      )}
+
+                      {slugInput !== page?.slug && isSlugAvailable === true && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          className="w-full text-[10px] h-8 mt-2"
+                          onClick={() => {
+                            if (confirm("Are you sure? Changing the slug will break existing links.")) {
+                              onUpdatePage?.({ slug: slugInput });
+                            }
+                          }}
+                        >
+                          Confirm New Slug
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -398,7 +522,7 @@ function PreviewContent({ page }: { page: any }) {
       }
     >
 
-      <div className="mt-4 sm:mt-6 md:mt-8 space-y-2 sm:space-y-3 w-full">
+      <div className="mt-4 sm:mt-6 md:mt-8 space-y-2 sm:space-y-3 w-full px-2 sm:px-4">
         {/* Avatar */}
         <div className="w-14 sm:w-16 md:w-20 h-14 sm:h-16 md:h-20 rounded-full bg-slate-200 mx-auto border-2 border-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
           {page?.avatarUrl ? (
@@ -412,18 +536,25 @@ function PreviewContent({ page }: { page: any }) {
           )}
         </div>
 
-        {/* Title & Bio */}
-        <div className="space-y-0.5 sm:space-y-1">
-          <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 line-clamp-2">
-            {page?.title || "Page Title"}
-          </h2>
-          <p className="text-[10px] sm:text-xs md:text-xs text-slate-500 px-2 line-clamp-2">
-            {page?.bio || "Welcome to my microsite"}
-          </p>
-        </div>
+          <div className="space-y-0.5 sm:space-y-1">
+            <h2 className={`text-sm sm:text-base md:text-lg font-bold line-clamp-2 ${
+              page?.titleColor && page.titleColor !== "default" 
+                ? TEXT_COLORS.find(c => c.id === page.titleColor)?.class || "text-foreground"
+                : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-foreground")
+            }`} style={page?.titleColor && page.titleColor !== "default" ? TEXT_COLORS.find(c => c.id === page.titleColor)?.style : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.style : {})}>
+              {page?.title || "Page Title"}
+            </h2>
+            <p className={`text-[10px] sm:text-xs md:text-xs px-2 line-clamp-2 ${
+              page?.bioColor && page.bioColor !== "default"
+                ? TEXT_COLORS.find(c => c.id === page.bioColor)?.class || "text-muted-foreground"
+                : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-muted-foreground")
+            }`} style={page?.bioColor && page.bioColor !== "default" ? TEXT_COLORS.find(c => c.id === page.bioColor)?.style : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.style : {})}>
+              {page?.bio || "Welcome to my microsite"}
+            </p>
+          </div>
 
         {/* Links */}
-        <div className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-2 w-full px-1">
+        <div className="space-y-1.5 sm:space-y-2 pt-1 w-full px-1">
           {page?.links?.map((link: any) => {
             const IconComponent = link.icon ? ICON_MAP[link.icon] : Link;
             // Fix: Properly handle both textColor and text_color field names
@@ -477,27 +608,27 @@ function PreviewContent({ page }: { page: any }) {
             );
           })}
 
-          {(!page?.links || page.links.length === 0) && (
-            <div className="space-y-1.5 sm:space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="w-full h-7 sm:h-9 md:h-11 bg-slate-100/50 rounded-md sm:rounded-lg md:rounded-xl border border-dashed border-slate-200"
-                />
-              ))}
-            </div>
-          )}
+            {(!page?.links || page.links.length === 0) && (
+              <div className="space-y-1.5 sm:space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="w-full h-7 sm:h-9 md:h-11 bg-white/10 rounded-md sm:rounded-lg md:rounded-xl border border-dashed border-white/20"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-auto pb-1.5 sm:pb-2 md:pb-4">
-        <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/80 backdrop-blur rounded-full border border-slate-200/50 shadow-sm text-center">
-          <span className="text-[7px] sm:text-[9px] md:text-[10px] text-slate-400">Powered by</span>
-          <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-slate-600">
-            RSAI Click
-          </span>
+        <div className="mt-auto pb-1.5 sm:pb-2 md:pb-4">
+          <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur rounded-full border border-white/30 shadow-sm text-center">
+            <span className="text-[7px] sm:text-[9px] md:text-[10px] text-white/50">Powered by</span>
+            <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-white">
+              RSAI Click
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }
