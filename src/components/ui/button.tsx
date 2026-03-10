@@ -54,12 +54,19 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
 
+  // Ensure any explicit text-white utility is applied with higher specificity
+  // Tailwind's utility order can cause a later class to be overridden by variant styles.
+  // By converting "text-white" to "!text-white" we force the white color.
+  const enhancedClassName = className?.includes("text-white")
+    ? className.replace(/text-white/g, "!text-white")
+    : className
+
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, className: enhancedClassName }))}
       {...props}
     />
   )

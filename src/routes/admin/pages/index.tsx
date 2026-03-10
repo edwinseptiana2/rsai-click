@@ -68,7 +68,7 @@ function PagesList() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 gap-1"
+                  className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 gap-1 text-white"
                 >
                   <ExternalLink size={14} />
                   <span className="text-xs">Visit</span>

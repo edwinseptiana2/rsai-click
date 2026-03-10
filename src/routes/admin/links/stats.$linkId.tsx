@@ -53,7 +53,7 @@ function ShortLinkStatsPage() {
             Copy
           </Button>
           <a href={fullUrl} target="_blank" rel="noopener noreferrer">
-            <Button size="sm">
+            <Button size="sm" className="text-white">
               <ExternalLink size={14} className="mr-2" />
               Visit
             </Button>

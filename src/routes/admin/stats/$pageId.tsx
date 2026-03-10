@@ -52,7 +52,7 @@ function PageStats() {
             <Copy size={14} className="mr-2" />
             Copy URL
           </Button>
-          <Button size="sm" onClick={handleVisit}>
+          <Button size="sm" onClick={handleVisit} className="text-white">
             <ExternalLink size={14} className="mr-2" />
             Visit
           </Button>

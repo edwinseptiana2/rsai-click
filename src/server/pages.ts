@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { db } from "../db";
-import { pages, links } from "../db/schema";
+import { pages, links, shortLinks } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { ensureSession } from "./auth";
 
@@ -65,13 +65,18 @@ export const checkSlugAvailability = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string(), excludeId: z.number().optional() }))
   .handler(async ({ data }) => {
     const { slug, excludeId } = data;
-    const existing = await db.query.pages.findFirst({
-      where: (p, { and, eq: e, ne }) => 
-        excludeId 
-          ? and(e(p.slug, slug), ne(p.id, excludeId))
-          : e(p.slug, slug),
-    });
-    return { available: !existing };
+    const [existingPage, existingShort] = await Promise.all([
+      db.query.pages.findFirst({
+        where: (p, { and, eq: e, ne }) => 
+          excludeId 
+            ? and(e(p.slug, slug), ne(p.id, excludeId))
+            : e(p.slug, slug),
+      }),
+      db.query.shortLinks.findFirst({
+        where: eq(shortLinks.slug, slug),
+      }),
+    ]);
+    return { available: !existingPage && !existingShort };
   });
 
 export const createPage = createServerFn({ method: "POST" })
@@ -91,12 +96,16 @@ export const createPage = createServerFn({ method: "POST" })
     const typedData = data;
     const session = await ensureSession();
 
-    // Check slug uniqueness
-    const existing = await db.query.pages.findFirst({
-      where: eq(pages.slug, typedData.slug),
-    });
-    if (existing) {
+    // Check slug uniqueness across pages and short links
+    const [existingPage, existingShort] = await Promise.all([
+      db.query.pages.findFirst({ where: eq(pages.slug, typedData.slug) }),
+      db.query.shortLinks.findFirst({ where: eq(shortLinks.slug, typedData.slug) }),
+    ]);
+    if (existingPage) {
       throw new Error(`Slug "${typedData.slug}" is already taken.`);
+    }
+    if (existingShort) {
+      throw new Error(`Slug "${typedData.slug}" conflicts with an existing short link.`);
     }
 
     const [result] = await db.insert(pages).values({
@@ -137,11 +146,19 @@ export const updatePage = createServerFn({ method: "POST" })
 
     // If slug is being updated, check uniqueness
     if (updates.slug) {
-      const existing = await db.query.pages.findFirst({
+      // Check against other pages
+      const existingPage = await db.query.pages.findFirst({
         where: (p, { and, eq: e, ne }) => and(e(p.slug, updates.slug as string), ne(p.id, id)),
       });
-      if (existing) {
+      // Check against short links
+      const existingShort = await db.query.shortLinks.findFirst({
+        where: eq(shortLinks.slug, updates.slug as string),
+      });
+      if (existingPage) {
         throw new Error(`Slug "${updates.slug}" is already taken.`);
+      }
+      if (existingShort) {
+        throw new Error(`Slug "${updates.slug}" conflicts with an existing short link.`);
       }
     }
 

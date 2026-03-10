@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, User, Link, ExternalLink, Share2, Check, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { ICON_MAP, getButtonStyles, TEXT_COLORS } from "@/components/microsite/button-templates";
 import { BACKGROUND_PATTERNS } from "@/components/microsite/background-patterns";
 import { checkSlugAvailability } from "@/server/pages";
@@ -82,7 +83,14 @@ export function EditorShell({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [slugInput, page?.slug, page?.id]);
+    }, [slugInput, page?.slug, page?.id]);
+
+  // Show toast notification when slug is unavailable
+  React.useEffect(() => {
+    if (isSlugAvailable === false) {
+      toast.error("Slug is already taken. Please choose another.");
+    }
+  }, [isSlugAvailable]);
   const [previewKey, setPreviewKey] = React.useState(0);
   const [showPreviewMobile, setShowPreviewMobile] = React.useState(false);
   const [shareToast, setShareToast] = React.useState<{ show: boolean; message: string }>({ show: false, message: "" });

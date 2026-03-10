@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { db } from "../db";
-import { shortLinks, shortLinkClicks } from "../db/schema";
+import { shortLinks, shortLinkClicks, pages } from "../db/schema";
 import { eq, sql, and, gte, desc } from "drizzle-orm";
 import { ensureSession } from "./auth";
 
@@ -131,13 +131,17 @@ export const checkShortLinkSlugAvailability = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string(), excludeId: z.number().optional() }))
   .handler(async ({ data }) => {
     const { slug, excludeId } = data;
-    const existing = await db.query.shortLinks.findFirst({
-      where: (s, { and, eq: e, ne }) => 
-        excludeId 
+    const existingShort = await db.query.shortLinks.findFirst({
+      where: (s, { and, eq: e, ne }) =>
+        excludeId
           ? and(e(s.slug, slug), ne(s.id, excludeId))
           : e(s.slug, slug),
     });
-    return { available: !existing };
+    // Also ensure slug is not used by a page
+    const existingPage = await db.query.pages.findFirst({
+      where: (p, { eq: e }) => e(p.slug, slug),
+    });
+    return { available: !existingShort && !existingPage };
   });
 
 export const getShortLinkById = createServerFn({ method: "GET" })
@@ -169,10 +173,14 @@ export const createShortLink = createServerFn({ method: "POST" })
 
     let slug: string;
     if (typedData.slug) {
-      const existing = await db.query.shortLinks.findFirst({
+      // Ensure slug is unique across short links and pages
+      const existingShort = await db.query.shortLinks.findFirst({
         where: eq(shortLinks.slug, typedData.slug),
       });
-      if (existing) {
+      const existingPage = await db.query.pages.findFirst({
+        where: (p, { eq: e }) => e(p.slug, typedData.slug),
+      });
+      if (existingShort || existingPage) {
         throw new Error(`Slug "${typedData.slug}" is already taken.`);
       }
       slug = typedData.slug;
@@ -233,10 +241,15 @@ export const updateShortLink = createServerFn({ method: "POST" })
     
     // If updating slug, check uniqueness
     if (typedData.slug && typedData.slug !== existing.slug) {
+      // Check against other short links
       const slugExists = await db.query.shortLinks.findFirst({
         where: eq(shortLinks.slug, typedData.slug),
       });
-      if (slugExists) {
+      // Check against pages
+      const pageExists = await db.query.pages.findFirst({
+        where: (p, { eq: e }) => e(p.slug, typedData.slug),
+      });
+      if (slugExists || pageExists) {
         throw new Error(`Slug "${typedData.slug}" is already taken.`);
       }
     }
