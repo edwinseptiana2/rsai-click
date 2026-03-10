@@ -4,6 +4,7 @@ import { getDashboardStats } from "@/server/clicks";
 import { getPagesWithStats } from "@/server/pages";
 import { getShortLinkDashboardStats, getShortLinksWithStats } from "@/server/shortLinks";
 import { BarChart3, Smartphone, Globe, Clock, ExternalLink, Copy, Link as LinkIcon, Link2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/")({
@@ -322,29 +323,26 @@ function AdminDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a
-                      href={`/admin/stats/${page.id}`}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
-                    >
-                      <BarChart3 size={14} />
-                      Stats
-                    </a>
-                    <button
-                      onClick={handleCopyUrl}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
-                    >
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/admin/stats/${page.id}`}>
+                        <BarChart3 size={14} />
+                        Stats
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleCopyUrl}>
                       <Copy size={14} />
                       Copy
-                    </button>
-                    <a
-                      href={fullUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-                    >
-                      <ExternalLink size={14} />
-                      Visit
-                    </a>
+                    </Button>
+                    <Button variant="default" size="sm" asChild>
+                      <a
+                        href={fullUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink size={14} />
+                        Visit
+                      </a>
+                    </Button>
                   </div>
                 </div>
               );
@@ -409,30 +407,29 @@ function AdminDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Link
-                      to="/admin/links/stats/$linkId"
-                      params={{ linkId: String(link.id) }}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
-                    >
-                      <BarChart3 size={14} />
-                      Stats
-                    </Link>
-                    <button
-                      onClick={handleCopyUrl}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
-                    >
+                    <Button variant="outline" size="sm" asChild>
+                      <Link
+                        to="/admin/links/stats/$linkId"
+                        params={{ linkId: String(link.id) }}
+                      >
+                        <BarChart3 size={14} />
+                        Stats
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleCopyUrl}>
                       <Copy size={14} />
                       Copy
-                    </button>
-                    <a
-                      href={fullUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-                    >
-                      <ExternalLink size={14} />
-                      Visit
-                    </a>
+                    </Button>
+                    <Button variant="default" size="sm" asChild>
+                      <a
+                        href={fullUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink size={14} />
+                        Visit
+                      </a>
+                    </Button>
                   </div>
                 </div>
               );

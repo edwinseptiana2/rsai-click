@@ -64,7 +64,7 @@ function ShortLinksList() {
     e.preventDefault();
     e.stopPropagation();
     const fullUrl = `${window.location.origin}/${link.slug}`;
-    
+
     try {
       const dataUrl = await QRCodeLib.toDataURL(fullUrl, {
         width: 300,
@@ -88,7 +88,7 @@ function ShortLinksList() {
 
   const handleDownloadQR = () => {
     if (!qrModal) return;
-    
+
     const link = document.createElement("a");
     link.download = `qrcode-${qrModal.slug}.png`;
     link.href = qrModal.dataUrl;
@@ -120,7 +120,7 @@ function ShortLinksList() {
           {shortLinks.map((link) => {
             const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/${link.slug}`;
             const linkTitle = link.title || link.slug;
-            
+
             return (
               <div
                 key={link.id}
@@ -153,55 +153,61 @@ function ShortLinksList() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    to="/admin/links/stats/$linkId"
-                    params={{ linkId: String(link.id) }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
-                  >
-                    <BarChart3 size={14} />
-                    Stats
-                  </Link>
-                  <Link
-                    to="/admin/links/$linkId"
-                    params={{ linkId: String(link.id) }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
-                  >
-                    <Pencil size={14} />
-                    Edit
-                  </Link>
-                  <button
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      to="/admin/links/stats/$linkId"
+                      params={{ linkId: String(link.id) }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <BarChart3 size={14} />
+                      Stats
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      to="/admin/links/$linkId"
+                      params={{ linkId: String(link.id) }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Pencil size={14} />
+                      Edit
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => handleShowQR(link, e)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
                   >
                     <QrCode size={14} />
                     QR
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => handleCopy(link.slug, e)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
                   >
                     <Copy size={14} />
                     Copy
-                  </button>
-                  <a
-                    href={fullUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink size={14} />
-                    Visit
-                  </a>
-                  <button
+                  </Button>
+                  <Button variant="default" size="sm" asChild>
+                    <a
+                      href={fullUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink size={14} />
+                      Visit
+                    </a>
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
                     onClick={(e) => handleDelete(link.id, linkTitle, e)}
                     disabled={isDeleting === link.id}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-md transition-colors disabled:opacity-50"
                   >
                     <Trash2 size={14} />
-                  </button>
+                  </Button>
                 </div>
               </div>
             );
@@ -232,40 +238,35 @@ function ShortLinksList() {
               <h3 className="text-lg font-semibold text-foreground">
                 QR Code
               </h3>
-              <button
-                onClick={handleCloseQR}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
+              <Button variant="ghost" size="icon" onClick={handleCloseQR}>
                 <X size={18} />
-              </button>
+              </Button>
             </div>
-            
+
             <div className="text-center mb-4">
               <p className="text-sm font-medium text-foreground truncate">{qrModal.title}</p>
               <p className="text-xs text-muted-foreground truncate">{qrModal.url}</p>
             </div>
-            
+
             <div className="flex justify-center mb-4 bg-white p-4 rounded-lg">
               <img src={qrModal.dataUrl} alt="QR Code" className="w-full max-w-[250px]" />
             </div>
-            
+
             <div className="flex gap-2">
-              <button
-                onClick={handleDownloadQR}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-              >
+              <Button className="flex-1" onClick={handleDownloadQR}>
                 <Download size={16} />
                 Download PNG
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => {
                   navigator.clipboard.writeText(qrModal.url);
                   toast.success("Link copied!");
                 }}
-                className="px-4 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
               >
                 <Copy size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

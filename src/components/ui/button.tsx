@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-linear-to-r from-(--lagoon) to-(--lagoon-deep) text-white shadow-lg shadow-(--lagoon)/25 hover:shadow-xl hover:shadow-(--lagoon)/35 hover:brightness-105 hover:scale-[1.02] rounded-lg", 
+          "bg-linear-to-r from-(--lagoon) to-(--lagoon-deep) text-white shadow-lg shadow-(--lagoon)/25 hover:shadow-xl hover:shadow-(--lagoon)/35 hover:brightness-105 hover:scale-[1.02] rounded-lg",
         outline:
           "border-border bg-background shadow-xs hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

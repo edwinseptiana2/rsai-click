@@ -19,7 +19,7 @@ function PagesList() {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm("Are you sure you want to delete this page?")) return;
-    
+
     const { deletePage } = await import("@/server/pages");
     await deletePage({ data: id });
     window.location.reload();
@@ -56,27 +56,29 @@ function PagesList() {
                   <User size={40} className="text-slate-400" />
                 )}
               </div>
-              
+
               {/* Page Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate text-foreground">{page.title}</p>
                 <p className="text-xs text-muted-foreground truncate">rsai.click/{page.slug}</p>
               </div>
-              
+
               {/* Actions */}
               <div className="flex items-center justify-between pt-2 border-t border-border">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 gap-1 text-white"
-                >
-                  <ExternalLink size={14} />
-                  <span className="text-xs">Visit</span>
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`/${page.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink size={14} />
+                    Visit
+                  </a>
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                  variant="destructive"
+                  size="sm"
                   onClick={(e) => handleDelete(page.id, e)}
                 >
                   <Trash2 size={16} />
