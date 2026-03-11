@@ -62,13 +62,18 @@ function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg transition-colors dark:border-slate-700 dark:bg-slate-950/80">
+      <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg transition-colors dark:border-slate-700 dark:bg-[#60d7cf]">
         <nav className="page-wrap flex items-center justify-between py-3 sm:py-4">
           <div className="flex items-center gap-2">
-            <img
+            {/* <img
               src="/logo-rsai-click-new.png"
               alt="RSAI Click"
               className="h-7 w-auto"
+            /> */}
+            <img
+              src="/rsai-click-new-icon-only.png"
+              alt="RSAI Click"
+              className="h-7 w-auto rounded-sm dark:bg-white"
             />
             <span className="text-lg font-bold text-(--sea-ink) dark:text-slate-50">
               RSAI Click
@@ -96,7 +101,7 @@ function LandingPage() {
                 >
                   Sign in
                 </Link>
-                
+
                 <Button asChild style={{ color: "white" }} >
                   <Link to="/register">Get Started</Link>
                 </Button>
@@ -125,28 +130,9 @@ function LandingPage() {
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             {session ? (
-              <Button  variant="default" style={{ color: "white" }}  asChild size="lg">
+              <Button variant="default" style={{ color: "white" }} asChild size="lg">
                 <Link to="/admin" className="gap-2">
                   Go to Dashboard
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </Link>
-            </Button>
-            ) : (
-              <>
-              <Button variant="default" style={{ color: "white" }} asChild size="lg">
-                <Link to="/register" className="gap-2">
-                  Create Your Page — Free
                   <svg
                     width="16"
                     height="16"
@@ -161,6 +147,25 @@ function LandingPage() {
                   </svg>
                 </Link>
               </Button>
+            ) : (
+              <>
+                <Button variant="default" style={{ color: "white" }} asChild size="lg">
+                  <Link to="/register" className="gap-2">
+                    Create Your Page — Free
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </Link>
+                </Button>
               </>
             )}
           </div>

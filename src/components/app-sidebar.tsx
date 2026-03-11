@@ -14,6 +14,7 @@ import {
 import { NavMain } from "#/components/nav-main";
 import { NavUser } from "#/components/nav-user";
 import { LayoutDashboard, FileText, Link2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export function AppSidebar({
   session,
@@ -51,7 +52,7 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/admin">
+              <Link to="/">
                 <div className="flex aspect-square size-10 items-center justify-center rounded-sm bg-sidebar-secondary text-sidebar-primary-foreground overflow-hidden">
                   <img
                     src="/rsai-click-new-icon-only.png"
@@ -63,7 +64,7 @@ export function AppSidebar({
                   <span className="truncate font-medium">RSAI Click</span>
                   <span className="truncate text-xs">Admin Panel</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

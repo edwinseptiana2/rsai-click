@@ -68,10 +68,10 @@ export function EditorShell({
     const timer = setTimeout(async () => {
       setIsCheckingSlug(true);
       try {
-        const result = await checkSlugAvailability({ 
+        const result = await checkSlugAvailability({
           data: {
-            slug: slugInput, 
-            excludeId: page?.id 
+            slug: slugInput,
+            excludeId: page?.id
           }
         });
         setIsSlugAvailable(result.available);
@@ -83,7 +83,7 @@ export function EditorShell({
     }, 500);
 
     return () => clearTimeout(timer);
-    }, [slugInput, page?.slug, page?.id]);
+  }, [slugInput, page?.slug, page?.id]);
 
   // Show toast notification when slug is unavailable
   React.useEffect(() => {
@@ -94,7 +94,7 @@ export function EditorShell({
   const [previewKey, setPreviewKey] = React.useState(0);
   const [showPreviewMobile, setShowPreviewMobile] = React.useState(false);
   const [shareToast, setShareToast] = React.useState<{ show: boolean; message: string }>({ show: false, message: "" });
-  
+
   React.useEffect(() => {
     // Force preview re-render whenever page data changes
     // This includes text color changes, link updates, etc.
@@ -238,7 +238,7 @@ export function EditorShell({
                         className="text-xs sm:text-sm"
                       />
                     </div>
-                    
+
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label htmlFor="page-title" className="text-xs sm:text-sm">Title</Label>
                       <Input
@@ -263,7 +263,7 @@ export function EditorShell({
                         placeholder="Tell us about yourself"
                       />
                     </div>
-                    
+
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-xs sm:text-sm">Title Color</Label>
                       <div className="grid grid-cols-7 gap-2">
@@ -272,11 +272,10 @@ export function EditorShell({
                             key={textColor.id}
                             type="button"
                             onClick={() => onUpdatePage?.({ titleColor: textColor.id })}
-                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold transition-all ${
-                              page?.titleColor === textColor.id || (!page?.titleColor && textColor.id === 'default')
-                                ? "ring-2 ring-offset-2 ring-slate-400 scale-110" 
-                                : "hover:scale-105"
-                            } ${textColor.id === 'white' ? 'bg-slate-800' : 'bg-white'}`}
+                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold transition-all ${page?.titleColor === textColor.id || (!page?.titleColor && textColor.id === 'default')
+                              ? "ring-2 ring-offset-2 ring-slate-400 scale-110"
+                              : "hover:scale-105"
+                              } ${textColor.id === 'white' ? 'bg-slate-800' : 'bg-white'}`}
                             title={textColor.name}
                           >
                             <span className={textColor.class} style={textColor.style}>Aa</span>
@@ -293,11 +292,10 @@ export function EditorShell({
                             key={textColor.id}
                             type="button"
                             onClick={() => onUpdatePage?.({ bioColor: textColor.id })}
-                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold transition-all ${
-                              page?.bioColor === textColor.id || (!page?.bioColor && textColor.id === 'default')
-                                ? "ring-2 ring-offset-2 ring-slate-400 scale-110" 
-                                : "hover:scale-105"
-                            } ${textColor.id === 'white' ? 'bg-slate-800' : 'bg-white'}`}
+                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold transition-all ${page?.bioColor === textColor.id || (!page?.bioColor && textColor.id === 'default')
+                              ? "ring-2 ring-offset-2 ring-slate-400 scale-110"
+                              : "hover:scale-105"
+                              } ${textColor.id === 'white' ? 'bg-slate-800' : 'bg-white'}`}
                             title={textColor.name}
                           >
                             <span className={textColor.class} style={textColor.style}>Aa</span>
@@ -318,11 +316,10 @@ export function EditorShell({
                       <button
                         key={pattern.id}
                         onClick={() => onUpdatePage?.({ backgroundPattern: pattern.id })}
-                        className={`relative h-16 sm:h-20 rounded-lg border-2 overflow-hidden transition-all hover:scale-105 ${
-                          page?.backgroundPattern === pattern.id
-                            ? "border-slate-900 ring-2 ring-offset-2 ring-slate-300"
-                            : "border-slate-200 hover:border-slate-300"
-                        }`}
+                        className={`relative h-16 sm:h-20 rounded-lg border-2 overflow-hidden transition-all hover:scale-105 ${page?.backgroundPattern === pattern.id
+                          ? "border-slate-900 ring-2 ring-offset-2 ring-slate-300"
+                          : "border-slate-200 hover:border-slate-300"
+                          }`}
                         title={pattern.name}
                       >
                         {/* Preview background */}
@@ -331,10 +328,10 @@ export function EditorShell({
                           style={
                             pattern.pattern
                               ? {
-                                  backgroundColor: pattern.preview === "white" ? "white" : pattern.preview,
-                                  backgroundImage: `url("${pattern.pattern}")`,
-                                  backgroundSize: "40px 40px",
-                                }
+                                backgroundColor: pattern.preview === "white" ? "white" : pattern.preview,
+                                backgroundImage: `url("${pattern.pattern}")`,
+                                backgroundSize: "40px 40px",
+                              }
                               : {}
                           }
                         />
@@ -347,7 +344,7 @@ export function EditorShell({
                       </button>
                     ))}
                   </div>
-                  
+
                   {/* Random Gradient Button */}
                   <Button
                     onClick={() => {
@@ -411,10 +408,9 @@ export function EditorShell({
                             setSlugInput(val);
                             // We don't call onUpdatePage directly here because we want to validate first
                           }}
-                          className={`font-mono text-[10px] sm:text-xs pr-10 ${
-                            isSlugAvailable === false ? "border-red-500 focus-visible:ring-red-500" : 
+                          className={`font-mono text-[10px] sm:text-xs pr-10 ${isSlugAvailable === false ? "border-red-500 focus-visible:ring-red-500" :
                             isSlugAvailable === true ? "border-green-500 focus-visible:ring-green-500" : ""
-                          }`}
+                            }`}
                           placeholder="new-slug-name"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
@@ -429,7 +425,7 @@ export function EditorShell({
                           )}
                         </div>
                       </div>
-                      
+
                       {isSlugAvailable === false && (
                         <p className="text-[10px] text-red-500 mt-1">This slug is already taken.</p>
                       )}
@@ -438,9 +434,9 @@ export function EditorShell({
                       )}
 
                       {slugInput !== page?.slug && isSlugAvailable === true && (
-                        <Button 
-                          size="sm" 
-                          variant="destructive" 
+                        <Button
+                          size="sm"
+                          variant="destructive"
                           className="w-full text-[10px] h-8 mt-2"
                           onClick={() => {
                             if (confirm("Are you sure? Changing the slug will break existing links.")) {
@@ -462,7 +458,7 @@ export function EditorShell({
 
       {/* Right Panel: Preview */}
       <div className="w-full lg:flex-1 flex flex-col p-4 lg:p-6 bg-card rounded-xl border border-border shadow-sm overflow-hidden h-auto lg:h-full">
-       
+
         <div className="w-full flex flex-col lg:flex-col items-center gap-3 lg:gap-4">
           {/* URL Indicator */}
           <div className="w-full max-w-[280px] sm:max-w-[320px] flex items-center justify-center gap-2 bg-card px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-border text-[10px] sm:text-xs font-medium text-muted-foreground shadow-sm flex-shrink-0">
@@ -498,7 +494,7 @@ export function EditorShell({
               onClick={handleShare}
               className="rounded-full px-3 sm:px-5 text-xs sm:text-sm text-muted-foreground border-border bg-card hover:bg-muted shadow-sm transition-colors"
             >
-              <Share2 size={16} className="sm:w-6 sm:h-6"/>
+              <Share2 size={16} className="sm:w-6 sm:h-6" />
               <span className="hidden sm:inline">Share</span>
             </Button>
           </div>
@@ -521,12 +517,12 @@ function PreviewContent({ page }: { page: any }) {
         customGradientCss
           ? { background: customGradientCss }
           : bgPattern?.pattern
-          ? {
+            ? {
               backgroundColor: bgPattern.preview === "white" ? "white" : bgPattern.preview,
               backgroundImage: `url("${bgPattern.pattern}")`,
               backgroundSize: "40px 40px",
             }
-          : {}
+            : {}
       }
     >
 
@@ -544,22 +540,20 @@ function PreviewContent({ page }: { page: any }) {
           )}
         </div>
 
-          <div className="space-y-0.5 sm:space-y-1">
-            <h2 className={`text-sm sm:text-base md:text-lg font-bold line-clamp-2 ${
-              page?.titleColor && page.titleColor !== "default" 
-                ? TEXT_COLORS.find(c => c.id === page.titleColor)?.class || "text-foreground"
-                : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-foreground")
+        <div className="space-y-0.5 sm:space-y-1">
+          <h2 className={`text-sm sm:text-base md:text-lg font-bold line-clamp-2 ${page?.titleColor && page.titleColor !== "default"
+            ? TEXT_COLORS.find(c => c.id === page.titleColor)?.class || "text-foreground"
+            : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-foreground")
             }`} style={page?.titleColor && page.titleColor !== "default" ? TEXT_COLORS.find(c => c.id === page.titleColor)?.style : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.style : {})}>
-              {page?.title || "Page Title"}
-            </h2>
-            <p className={`text-[10px] sm:text-xs md:text-xs px-2 line-clamp-2 ${
-              page?.bioColor && page.bioColor !== "default"
-                ? TEXT_COLORS.find(c => c.id === page.bioColor)?.class || "text-muted-foreground"
-                : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-muted-foreground")
+            {page?.title || "Page Title"}
+          </h2>
+          <p className={`text-[10px] sm:text-xs md:text-xs px-2 line-clamp-2 ${page?.bioColor && page.bioColor !== "default"
+            ? TEXT_COLORS.find(c => c.id === page.bioColor)?.class || "text-muted-foreground"
+            : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.class : "text-muted-foreground")
             }`} style={page?.bioColor && page.bioColor !== "default" ? TEXT_COLORS.find(c => c.id === page.bioColor)?.style : (page?.textColor && page.textColor !== "default" ? TEXT_COLORS.find(c => c.id === page.textColor)?.style : {})}>
-              {page?.bio || "Welcome to my microsite"}
-            </p>
-          </div>
+            {page?.bio || "Welcome to my microsite"}
+          </p>
+        </div>
 
         {/* Links */}
         <div className="space-y-1.5 sm:space-y-2 pt-1 w-full px-1">
@@ -569,7 +563,7 @@ function PreviewContent({ page }: { page: any }) {
             const textColorId = link.textColor ?? link.text_color ?? "default";
             const colorId = link.color ?? "default";
             const colorStyles = getButtonStyles(colorId, textColorId);
-            
+
             // Debug logging
             console.log(`Link "${link.title}":`, {
               textColor: link.textColor,
@@ -578,7 +572,7 @@ function PreviewContent({ page }: { page: any }) {
               colorId,
               colorStyles
             });
-            
+
             let customIcon = null;
             try {
               if (link.customIcon) {
@@ -587,7 +581,7 @@ function PreviewContent({ page }: { page: any }) {
             } catch (e) {
               customIcon = null;
             }
-            
+
             return (
               <a
                 key={link.id}
@@ -616,27 +610,27 @@ function PreviewContent({ page }: { page: any }) {
             );
           })}
 
-            {(!page?.links || page.links.length === 0) && (
-              <div className="space-y-1.5 sm:space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="w-full h-7 sm:h-9 md:h-11 bg-white/10 rounded-md sm:rounded-lg md:rounded-xl border border-dashed border-white/20"
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-auto pb-1.5 sm:pb-2 md:pb-4">
-          <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur rounded-full border border-white/30 shadow-sm text-center">
-            <span className="text-[7px] sm:text-[9px] md:text-[10px] text-white/50">Powered by</span>
-            <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-white">
-              RSAI Click
-            </span>
-          </div>
+          {(!page?.links || page.links.length === 0) && (
+            <div className="space-y-1.5 sm:space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-full h-7 sm:h-9 md:h-11 bg-white/10 rounded-md sm:rounded-lg md:rounded-xl border border-dashed border-white/20"
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    );
+
+      <div className="mt-4 pb-1.5 sm:pb-2 md:pb-4">
+        <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/50 backdrop-blur rounded-full border border-white/30 shadow-sm text-center">
+          <span className="text-[7px] sm:text-[9px] md:text-[10px] text-secondary/50">Powered by</span>
+          <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-secondary">
+            RSAI Click
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }

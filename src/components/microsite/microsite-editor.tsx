@@ -102,7 +102,7 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
     }));
 
     try {
-      await deleteLinkFn({ data: { id: linkId } });
+      await deleteLinkFn({ data: linkId });
     } catch (err) {
       console.error(err);
     }
