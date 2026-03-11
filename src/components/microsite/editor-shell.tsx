@@ -532,22 +532,23 @@ function PreviewContent({ page, onShare }: { page: any; onShare?: () => void }) 
     >
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 px-3 pt-3 flex-shrink-0">
-        <div className="w-full flex items-center justify-between px-3 sm:px-4 py-1.5 bg-white/50 backdrop-blur border border-white/30 rounded-full shadow-sm">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-            <span className="text-[10px] sm:text-xs font-bold text-secondary/80">RSAI Click</span>
+        <div className="w-fit mx-auto flex items-center gap-3 sm:gap-4 px-2 sm:px-3 py-1 bg-white/50 backdrop-blur border border-white/30 rounded-full shadow-sm">
+          <div className="flex items-center gap-1 sm:gap-1.5 focus-visible:outline-none">
+            <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
+            <span className="text-[7px] sm:text-[9px] font-bold text-secondary">RSAI Click</span>
           </div>
+          <div className="w-[1px] h-3 bg-secondary/10" />
           <Button
             variant="ghost"
             size="icon"
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white/20"
+            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full hover:bg-white/20 p-0"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onShare?.();
             }}
           >
-            <Share2 size={14} className="text-secondary/80" />
+            <Share2 size={10} className="text-secondary/60" />
           </Button>
         </div>
       </div>
