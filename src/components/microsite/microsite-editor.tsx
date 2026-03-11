@@ -206,7 +206,7 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
           items={page.links.map((l: any) => l.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {page.links.map((link: any) => (
               <LinkItem
                 key={link.id}

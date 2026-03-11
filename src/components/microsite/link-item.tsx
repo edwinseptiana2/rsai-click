@@ -1,4 +1,3 @@
-"use client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,11 +54,11 @@ export function LinkItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-card border border-border rounded-xl hover:shadow-md transition-all duration-200 overflow-hidden ${
-        isDragging ? "shadow-lg border-blue-200 ring-2 ring-blue-100" : ""
-      }`}
+      className={`group bg-card border border-border rounded-xl hover:shadow-md transition-all duration-200 overflow-hidden min-w-0 ${isDragging ? "shadow-lg border-blue-200 ring-2 ring-blue-100" : ""
+        }`}
     >
-      <div className="p-4 flex items-center gap-4">
+      {/* <div className="p-4 flex items-center gap-4 min-w-0 "> */}
+      <div className="p-4 grid grid-cols-[auto_auto_1fr_auto] items-center gap-4">
         <div
           {...attributes}
           {...listeners}
@@ -78,16 +77,16 @@ export function LinkItem({
           {!customIcon && (link.icon ? <IconComponent size={20} /> : <Link size={20} />)}
         </div>
 
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onEdit}>
+        <div className="flex-1 min-w-0 overflow-hidden cursor-pointer" onClick={onEdit}>
           <h3 className="text-sm font-semibold text-foreground truncate">
             {link.title || "Untitled Link"}
           </h3>
-          <p className="text-xs text-slate-400 truncate">
+          <p className="text-xs text-slate-400 truncate break-all">
             {link.url || "No URL"}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <Switch
             checked={link.isActive}
             onCheckedChange={onToggle}

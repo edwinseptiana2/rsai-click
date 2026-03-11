@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -140,9 +138,9 @@ export function EditorShell({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full gap-4 lg:gap-6 overflow-y-auto lg:overflow-hidden h-auto lg:h-full">
+    <div className="flex flex-col lg:flex-row w-full gap-4 lg:gap-6 min-w-0 items-start">
       {/* Left Panel: Editor */}
-      <div className="w-full lg:flex-1 flex flex-col bg-card rounded-xl border border-border shadow-sm overflow-hidden h-auto lg:h-full">
+      <div className="w-full lg:flex-1 min-w-0 flex flex-col bg-card rounded-xl border border-border shadow-sm">
         <Tabs defaultValue="components" className="flex-1 flex flex-col">
           <div className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-3 sm:pb-4 border-b border-border">
             <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10 md:h-11 p-1 bg-muted rounded-lg">
@@ -163,10 +161,10 @@ export function EditorShell({
             </TabsList>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+          <div className="flex-1 p-3 sm:p-4 md:p-6">
             <TabsContent
               value="components"
-              className="mt-0 space-y-4 md:space-y-6 focus-visible:outline-none"
+              className="mt-0 space-y-4 md:space-y-6 focus-visible:outline-none min-w-0"
             >
               <Button
                 onClick={onAddLink}
@@ -177,7 +175,7 @@ export function EditorShell({
                 <span className="sm:hidden">Add</span>
               </Button>
 
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-3 sm:space-y-4 flex-1 min-w-0">
                 {/* Component List will go here */}
                 {children}
               </div>
@@ -185,7 +183,7 @@ export function EditorShell({
 
             <TabsContent
               value="settings"
-              className="mt-0 space-y-4 md:space-y-6 focus-visible:outline-none"
+              className="mt-0 space-y-4 md:space-y-6 focus-visible:outline-none min-w-0"
             >
               <div className="space-y-4 md:space-y-6">
                 <div className="space-y-2">
@@ -464,7 +462,7 @@ export function EditorShell({
       />
 
       {/* Right Panel: Preview */}
-      <div className="w-full lg:flex-1 flex flex-col p-4 lg:p-6 bg-card rounded-xl border border-border shadow-sm overflow-hidden h-auto lg:h-full">
+      <div className="w-full lg:flex-1 lg:sticky lg:top-4 lg:h-fit flex flex-col p-4 lg:p-6 bg-card rounded-xl border border-border shadow-sm">
 
         <div className="w-full flex flex-col lg:flex-col items-center gap-3 lg:gap-4">
           {/* URL Indicator */}
@@ -476,7 +474,7 @@ export function EditorShell({
           {/* Mobile Frame Container - Responsive */}
           <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[9/16] bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] p-1.5 sm:p-2 shadow-xl sm:shadow-2xl border-[5px] sm:border-[6px] border-slate-800 overflow-hidden ring-1 ring-slate-900/5 flex-shrink-0">
             {/* Front Camera / Notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 h-4 sm:h-5 bg-slate-800 rounded-b-2xl z-20 flex items-center justify-center">
+            <div className="absolute z-50 top-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 h-4 sm:h-5 bg-slate-800 rounded-b-2xl flex items-center justify-center">
               <div className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-slate-900 mr-1 sm:mr-1.5" />
               <div className="w-6 sm:w-8 h-0.5 rounded-full bg-slate-700/50" />
             </div>
@@ -484,7 +482,7 @@ export function EditorShell({
             {/* Content Area */}
             <div className="w-full h-full bg-white rounded-[1.5rem] overflow-hidden relative">
               {/* Preview Content */}
-              <PreviewContent key={previewKey} page={page} />
+              <PreviewContent key={previewKey} page={page} onShare={handleShare} />
             </div>
           </div>
 
@@ -511,7 +509,7 @@ export function EditorShell({
   );
 }
 
-function PreviewContent({ page }: { page: any }) {
+function PreviewContent({ page, onShare }: { page: any; onShare?: () => void }) {
   // Check for custom gradient stored in backgroundPattern
   const isCustomGradient = page?.backgroundPattern?.startsWith('custom-gradient:');
   const customGradientCss = isCustomGradient ? page.backgroundPattern.replace('custom-gradient:', '') : null;
@@ -519,7 +517,7 @@ function PreviewContent({ page }: { page: any }) {
 
   return (
     <div
-      className={`absolute inset-0 p-3 sm:p-4 md:p-5 flex flex-col items-center text-center overflow-y-auto ${bgPattern?.bgClass || ""}`}
+      className={`absolute inset-0 flex flex-col items-center text-center overflow-y-auto ${bgPattern?.bgClass || ""}`}
       style={
         customGradientCss
           ? { background: customGradientCss }
@@ -532,8 +530,27 @@ function PreviewContent({ page }: { page: any }) {
             : {}
       }
     >
+      {/* Sticky Header */}
+      <div className="w-full flex items-center justify-between px-4 py-3 bg-white/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 mb-4 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-6 h-6 object-contain" />
+          <span className="text-xs font-bold text-foreground/80">RSAI Click</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-8 h-8 rounded-full hover:bg-white/20"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onShare?.();
+          }}
+        >
+          <Share2 size={16} className="text-foreground/80" />
+        </Button>
+      </div>
 
-      <div className="flex-1 w-full space-y-2 sm:space-y-3 px-2 sm:px-4 mt-4 sm:mt-6 md:mt-8">
+      <div className="flex-1 w-full space-y-4 sm:space-y-6 md:space-y-8 px-4 sm:px-6 md:px-8 mt-4 sm:mt-6 md:mt-8">
         {/* Avatar */}
         <div className="w-14 sm:w-16 md:w-20 h-14 sm:h-16 md:h-20 rounded-full bg-slate-200 mx-auto border-2 border-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
           {page?.avatarUrl ? (
@@ -620,8 +637,8 @@ function PreviewContent({ page }: { page: any }) {
         </div>
       </div>
 
-      <div className="mt-4 pb-1.5 sm:pb-2 md:pb-4">
-        <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/50 backdrop-blur rounded-full border border-white/30 shadow-sm text-center">
+      <div className="mt-4 pb-4 sm:pb-6 px-4">
+        <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-white/50 backdrop-blur rounded-full border border-white/30 shadow-sm text-center mx-auto w-fit">
           <span className="text-[7px] sm:text-[9px] md:text-[10px] text-secondary/50">Powered by</span>
           <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-secondary">
             RSAI Click

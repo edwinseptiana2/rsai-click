@@ -4,7 +4,8 @@ import { getPageBySlug } from '@/server/pages'
 import { trackClick } from '@/server/clicks'
 import { resolveShortLinkRedirect } from '@/server/shortLinks'
 import { getButtonStyles, ICON_MAP, TEXT_COLORS } from '@/components/microsite/button-templates'
-import { User, ExternalLink } from 'lucide-react'
+import { User, ExternalLink, Share2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { BACKGROUND_PATTERNS } from '@/components/microsite/background-patterns'
 
 export const Route = createFileRoute('/$slug')({
@@ -75,6 +76,38 @@ function RouteComponent() {
     window.open(link.url, '_blank', 'noopener,noreferrer')
   }
 
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const shareTitle = page.title || "Check out my microsite";
+    const shareText = page.bio || shareTitle;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast.success("Shared successfully!");
+      } catch (err) {
+        if ((err as any).name !== "AbortError") {
+          copyToClipboard(shareUrl);
+        }
+      }
+    } else {
+      copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success("Link copied to clipboard!");
+    }).catch(err => {
+      console.error("Failed to copy:", err);
+      toast.error("Failed to copy link");
+    });
+  };
+
   // Check for custom gradient stored in backgroundPattern
   const isCustomGradient = page.backgroundPattern?.startsWith('custom-gradient:')
   const customGradientCss = isCustomGradient ? page.backgroundPattern?.replace('custom-gradient:', '') : null
@@ -93,8 +126,22 @@ function RouteComponent() {
     : bgPattern ? { backgroundColor: bgPattern.preview } : {}
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 sm:p-6 ${bgPattern?.bgClass || ''}`} style={bgStyle}>
-      <div className="w-full max-w-md flex-1 flex flex-col space-y-6 text-center">
+    <div className={`min-h-screen flex flex-col items-center overflow-x-hidden ${bgPattern?.bgClass || ''}`} style={bgStyle}>
+      {/* Sticky Header */}
+      <div className="w-full max-w-md mx-auto flex items-center justify-between px-6 py-4 bg-white/10 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-7 h-7 object-contain" />
+          <span className="text-sm font-bold text-white/90">RSAI Click</span>
+        </div>
+        <button 
+          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+          onClick={handleShare}
+        >
+          <Share2 size={18} className="text-white/90" />
+        </button>
+      </div>
+
+      <div className="w-full max-w-md flex-1 flex flex-col space-y-6 text-center px-4 sm:px-6 py-6 sm:py-8">
         <div className="flex-1 space-y-6">
           {/* Avatar */}
           <div className="flex justify-center">
