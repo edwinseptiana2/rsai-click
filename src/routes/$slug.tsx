@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { getPageBySlug } from '@/server/pages'
 import { trackClick } from '@/server/clicks'
@@ -93,8 +93,9 @@ function RouteComponent() {
     : bgPattern ? { backgroundColor: bgPattern.preview } : {}
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 sm:p-6 ${bgPattern?.bgClass || ''}`} style={bgStyle}>
-      <div className="w-full max-w-md space-y-6 text-center">
+    <div className={`min-h-screen flex flex-col items-center p-4 sm:p-6 ${bgPattern?.bgClass || ''}`} style={bgStyle}>
+      <div className="w-full max-w-md flex-1 flex flex-col space-y-6 text-center">
+        <div className="flex-1 space-y-6">
           {/* Avatar */}
           <div className="flex justify-center">
             <div className="w-24 h-24 rounded-full bg-muted border-4 border-card shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
@@ -177,14 +178,19 @@ function RouteComponent() {
             </div>
           )}
 
-          {/* Footer */}
-          <div className="pt-4 border-t border-white/10">
-            <p className="text-xs text-white/40 font-light">
-              Created with <a href="/" className="text-white/60 hover:text-white font-semibold">rsai.click</a>
-            </p>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-8 pb-4">
+          <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/10 shadow-sm w-fit mx-auto">
+            <span className="text-[10px] text-white/50">Powered by</span>
+            <Link to="/" className="text-[10px] font-bold text-white hover:text-white/80 transition-colors">
+              RSAI Click
+            </Link>
           </div>
         </div>
       </div>
+    </div>
     )
 }
 

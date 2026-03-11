@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getShortLinkById, checkShortLinkSlugAvailability } from "@/server/shortLinks";
 import { Loader2, Check, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,6 +36,7 @@ function EditShortLink() {
     description: shortLink.description || "",
     isActive: shortLink.isActive,
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
@@ -119,9 +121,11 @@ function EditShortLink() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this short link? This action cannot be undone.")) return;
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
     try {
       const { deleteShortLink } = await import("@/server/shortLinks");
       await deleteShortLink({ data: shortLink.id });
@@ -130,6 +134,8 @@ function EditShortLink() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to delete short link";
       toast.error(message);
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -282,6 +288,15 @@ function EditShortLink() {
           </Button>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={confirmDelete}
+        title="Delete Short Link"
+        description="Are you sure you want to delete this short link? This action cannot be undone."
+        confirmText="Delete"
+      />
     </div>
   );
 }

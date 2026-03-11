@@ -5,6 +5,7 @@ import { Plus, ExternalLink, Trash2, Copy, QrCode, BarChart3, Download, X, Penci
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import QRCodeLib from "qrcode";
 
 export const Route = createFileRoute("/admin/links/")({
@@ -28,11 +29,19 @@ function ShortLinksList() {
   const [qrModal, setQrModal] = useState<QRModalData | null>(null);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
-  const handleDelete = async (id: number, title: string, e: React.MouseEvent) => {
+  const handleDelete = (id: number, title: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this short link?")) return;
+    setQrModal(null); // Close QR modal if open
+    setLinkToDelete({ id, title });
+  };
 
+  const [linkToDelete, setLinkToDelete] = useState<{ id: number; title: string } | null>(null);
+
+  const confirmDeleteLink = async () => {
+    if (!linkToDelete) return;
+
+    const { id, title } = linkToDelete;
     setIsDeleting(id);
     try {
       const { deleteShortLink } = await import("@/server/shortLinks");
@@ -44,6 +53,7 @@ function ShortLinksList() {
       toast.error(message);
     } finally {
       setIsDeleting(null);
+      setLinkToDelete(null);
     }
   };
 
@@ -271,6 +281,15 @@ function ShortLinksList() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={linkToDelete !== null}
+        onOpenChange={(open) => !open && setLinkToDelete(null)}
+        onConfirm={confirmDeleteLink}
+        title="Delete Short Link"
+        description={`Are you sure you want to delete "${linkToDelete?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+      />
     </div>
   );
 }

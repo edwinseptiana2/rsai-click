@@ -7,6 +7,7 @@ import { Plus, User, Link, ExternalLink, Share2, Check, X, Loader2 } from "lucid
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ICON_MAP, getButtonStyles, TEXT_COLORS } from "@/components/microsite/button-templates";
 import { BACKGROUND_PATTERNS } from "@/components/microsite/background-patterns";
 import { checkSlugAvailability } from "@/server/pages";
@@ -48,6 +49,7 @@ export function EditorShell({
   const [isSlugAvailable, setIsSlugAvailable] = React.useState<boolean | null>(null);
   const [isCheckingSlug, setIsCheckingSlug] = React.useState(false);
   const [slugInput, setSlugInput] = React.useState(page?.slug || "");
+  const [showSlugConfirm, setShowSlugConfirm] = React.useState(false);
 
   // Update slugInput when page.slug changes (e.g. on mount or after save)
   React.useEffect(() => {
@@ -92,7 +94,6 @@ export function EditorShell({
     }
   }, [isSlugAvailable]);
   const [previewKey, setPreviewKey] = React.useState(0);
-  const [showPreviewMobile, setShowPreviewMobile] = React.useState(false);
   const [shareToast, setShareToast] = React.useState<{ show: boolean; message: string }>({ show: false, message: "" });
 
   React.useEffect(() => {
@@ -435,14 +436,8 @@ export function EditorShell({
 
                       {slugInput !== page?.slug && isSlugAvailable === true && (
                         <Button
-                          size="sm"
-                          variant="destructive"
                           className="w-full text-[10px] h-8 mt-2"
-                          onClick={() => {
-                            if (confirm("Are you sure? Changing the slug will break existing links.")) {
-                              onUpdatePage?.({ slug: slugInput });
-                            }
-                          }}
+                          onClick={() => setShowSlugConfirm(true)}
                         >
                           Confirm New Slug
                         </Button>
@@ -455,6 +450,18 @@ export function EditorShell({
           </div>
         </Tabs>
       </div>
+
+      <ConfirmDialog
+        open={showSlugConfirm}
+        onOpenChange={setShowSlugConfirm}
+        onConfirm={() => {
+          onUpdatePage?.({ slug: slugInput });
+          setShowSlugConfirm(false);
+        }}
+        title="Change Slug"
+        description="Are you sure? Changing the slug will break existing links to this page."
+        confirmText="Change Slug"
+      />
 
       {/* Right Panel: Preview */}
       <div className="w-full lg:flex-1 flex flex-col p-4 lg:p-6 bg-card rounded-xl border border-border shadow-sm overflow-hidden h-auto lg:h-full">
@@ -526,7 +533,7 @@ function PreviewContent({ page }: { page: any }) {
       }
     >
 
-      <div className="mt-4 sm:mt-6 md:mt-8 space-y-2 sm:space-y-3 w-full px-2 sm:px-4">
+      <div className="flex-1 w-full space-y-2 sm:space-y-3 px-2 sm:px-4 mt-4 sm:mt-6 md:mt-8">
         {/* Avatar */}
         <div className="w-14 sm:w-16 md:w-20 h-14 sm:h-16 md:h-20 rounded-full bg-slate-200 mx-auto border-2 border-white shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
           {page?.avatarUrl ? (
@@ -564,15 +571,6 @@ function PreviewContent({ page }: { page: any }) {
             const colorId = link.color ?? "default";
             const colorStyles = getButtonStyles(colorId, textColorId);
 
-            // Debug logging
-            console.log(`Link "${link.title}":`, {
-              textColor: link.textColor,
-              text_color: link.text_color,
-              textColorId,
-              colorId,
-              colorStyles
-            });
-
             let customIcon = null;
             try {
               if (link.customIcon) {
@@ -591,7 +589,6 @@ function PreviewContent({ page }: { page: any }) {
                 className={`w-full py-2 sm:py-2.5 md:py-3 px-2.5 sm:px-3 md:px-4 rounded-md sm:rounded-lg md:rounded-xl border flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs md:text-sm font-medium hover:scale-[1.02] transition-transform ${colorStyles.bg} ${colorStyles.text} ${colorStyles.border}`}
                 style={colorStyles.textStyle as any}
               >
-                {console.log(`[Rendering] Applied classes: bg="${colorStyles.bg}" text="${colorStyles.text}" border="${colorStyles.border}" style=`, colorStyles.textStyle)}
                 {customIcon?.type === 'emoji' && (
                   <span className="text-sm sm:text-base md:text-lg">{customIcon.value}</span>
                 )}

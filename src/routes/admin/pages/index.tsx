@@ -3,6 +3,8 @@ import { getPages } from "@/server/pages";
 import { Link } from "@tanstack/react-router";
 import { Plus, ExternalLink, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useState } from "react";
 
 export const Route = createFileRoute("/admin/pages/")({
   loader: async () => {
@@ -14,14 +16,18 @@ export const Route = createFileRoute("/admin/pages/")({
 
 function PagesList() {
   const { pages } = Route.useLoaderData();
+  const [pageToDelete, setPageToDelete] = useState<number | null>(null);
 
-  const handleDelete = async (id: number, e: React.MouseEvent) => {
+  const handleDelete = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this page?")) return;
+    setPageToDelete(id);
+  };
 
+  const confirmDeletePage = async () => {
+    if (pageToDelete === null) return;
     const { deletePage } = await import("@/server/pages");
-    await deletePage({ data: id });
+    await deletePage({ data: pageToDelete });
     window.location.reload();
   };
 
@@ -42,7 +48,7 @@ function PagesList() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {pages.map((page) => (
-          <Link key={page.id} to={`/admin/pages/${page.id}`} className="block">
+          <Link key={page.id} to="/admin/pages/$pageId" params={{ pageId: String(page.id) }} className="block">
             <div className="flex flex-col gap-3 p-4 rounded-xl border border-border hover:border-border hover:shadow-md transition-all cursor-pointer bg-card overflow-hidden">
               {/* Profile Image */}
               <div className="flex h-32 w-full items-center justify-center rounded-lg bg-muted overflow-hidden">
@@ -97,6 +103,15 @@ function PagesList() {
           </Link>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pageToDelete !== null}
+        onOpenChange={(open) => !open && setPageToDelete(null)}
+        onConfirm={confirmDeletePage}
+        title="Delete Page"
+        description="Are you sure you want to delete this page? This action cannot be undone."
+        confirmText="Delete"
+      />
     </div>
   );
 }

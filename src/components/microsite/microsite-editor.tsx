@@ -36,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { BUTTON_TEMPLATES, BUTTON_COLORS, TEXT_COLORS, ICON_MAP, getButtonStyles } from "@/components/microsite/button-templates";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function MicrositeEditor({ pageId }: { pageId: number }) {
   const [page, setPage] = useState<any>(null);
@@ -43,6 +44,7 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
   const [error, setError] = useState<string | null>(null);
   const [editingLink, setEditingLink] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [linkToDelete, setLinkToDelete] = useState<number | null>(null);
 
   const createLinkFn = useServerFn(createLink) as any;
   const updateLinkFn = useServerFn(updateLink) as any;
@@ -93,8 +95,13 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
     }
   };
 
-  const handleDeleteLink = async (linkId: number) => {
-    if (!confirm("Are you sure you want to delete this link?")) return;
+  const handleDeleteLink = (linkId: number) => {
+    setLinkToDelete(linkId);
+  };
+
+  const confirmDeleteLink = async () => {
+    if (linkToDelete === null) return;
+    const linkId = linkToDelete;
 
     setPage((prev: any) => ({
       ...prev,
@@ -105,6 +112,8 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
       await deleteLinkFn({ data: linkId });
     } catch (err) {
       console.error(err);
+    } finally {
+      setLinkToDelete(null);
     }
   };
 
@@ -477,6 +486,15 @@ export function MicrositeEditor({ pageId }: { pageId: number }) {
           </p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={linkToDelete !== null}
+        onOpenChange={(open) => !open && setLinkToDelete(null)}
+        onConfirm={confirmDeleteLink}
+        title="Delete Component"
+        description="Are you sure you want to delete this component? This action cannot be undone."
+        confirmText="Delete"
+      />
     </EditorShell>
   );
 }
