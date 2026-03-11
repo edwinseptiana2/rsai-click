@@ -531,23 +531,25 @@ function PreviewContent({ page, onShare }: { page: any; onShare?: () => void }) 
       }
     >
       {/* Sticky Header */}
-      <div className="w-full flex items-center justify-between px-4 py-3 bg-white/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 mb-4 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-6 h-6 object-contain" />
-          <span className="text-xs font-bold text-foreground/80">RSAI Click</span>
+      <div className="sticky top-0 z-30 px-3 pt-3 flex-shrink-0">
+        <div className="w-full flex items-center justify-between px-3 sm:px-4 py-1.5 bg-white/50 backdrop-blur border border-white/30 rounded-full shadow-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+            <span className="text-[10px] sm:text-xs font-bold text-secondary/80">RSAI Click</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white/20"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onShare?.();
+            }}
+          >
+            <Share2 size={14} className="text-secondary/80" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-8 h-8 rounded-full hover:bg-white/20"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onShare?.();
-          }}
-        >
-          <Share2 size={16} className="text-foreground/80" />
-        </Button>
       </div>
 
       <div className="flex-1 w-full space-y-4 sm:space-y-6 md:space-y-8 px-4 sm:px-6 md:px-8 mt-4 sm:mt-6 md:mt-8">

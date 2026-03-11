@@ -128,17 +128,19 @@ function RouteComponent() {
   return (
     <div className={`min-h-screen flex flex-col items-center overflow-x-hidden ${bgPattern?.bgClass || ''}`} style={bgStyle}>
       {/* Sticky Header */}
-      <div className="w-full max-w-md mx-auto flex items-center justify-between px-6 py-4 bg-white/10 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-7 h-7 object-contain" />
-          <span className="text-sm font-bold text-white/90">RSAI Click</span>
+      <div className="sticky top-0 z-40 w-full max-w-md mx-auto px-4 pt-4 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/10 shadow-sm">
+          <div className="flex items-center gap-2">
+            <img src="/rsai-click-new-icon-only.png" alt="Logo" className="w-6 h-6 object-contain" />
+            <span className="text-[10px] sm:text-xs font-bold text-white/90">RSAI Click</span>
+          </div>
+          <button 
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            onClick={handleShare}
+          >
+            <Share2 size={16} className="text-white/90" />
+          </button>
         </div>
-        <button 
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          onClick={handleShare}
-        >
-          <Share2 size={18} className="text-white/90" />
-        </button>
       </div>
 
       <div className="w-full max-w-md flex-1 flex flex-col space-y-6 text-center px-4 sm:px-6 py-6 sm:py-8">
